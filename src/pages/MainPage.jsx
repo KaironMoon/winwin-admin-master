@@ -20,7 +20,6 @@ import OKXOAuthModal from '../components/OKXOAuthModal';
 import OKXConnectModal from '../components/OKXConnectModal';
 import OKXTestPanel from '../components/OKXTestPanel';
 import MetaProphetModal from '../components/MetaProphetModal';
-import okxService from '../lib/okxService';
 import UserServices from '../services/userServices';
 import { useAtomValue } from 'jotai';
 import { isDemoAtom } from '../store/isDemoStore';
@@ -36,11 +35,6 @@ function MainPage() {
     const [showOKXConnectModal, setShowOKXConnectModal] = useState(false);
     const [showMetaProphetModal, setShowMetaProphetModal] = useState(false);
     const [user, setUser] = useState(null);
-    const [okxConnected, setOkxConnected] = useState(false);
-    const [balance, setBalance] = useState(null);
-    const [positions, setPositions] = useState([]);
-    const [orders, setOrders] = useState([]);
-    // fills는 VIP5 이상 필요하므로 제거, orders의 filled 상태로 대체
     const isDemo = useAtomValue(isDemoAtom);
   
     // 현재 라우트에 따른 헤더 top 값 결정
@@ -117,22 +111,6 @@ function MainPage() {
               // 임시로 브로커 역할 추가 (실제 환경에서는 서버에서 전달받음)
               setUser(userInfo);
               
-              // OKX API 키가 있으면 연결 시도
-              if (userInfo.okx_api_key && userInfo.okx_api_secret && userInfo.okx_api_passphrase) {
-                console.log("!!!!!!!initializeOKXConnection calls!!!!!!!!", isDemo);
-                initializeOKXConnection(userInfo);
-              } /*else {
-                // 테스트 모드 사용
-                okxService.setBalanceUpdateHandler((newBalance) => {
-                  setBalance(newBalance);
-                });
-  
-                okxService.setConnectionChangeHandler((connected) => {
-                  setOkxConnected(connected);
-                });
-  
-                okxService.initializeTestMode();
-              }*/
             } else {
               // 토큰이 유효하지 않으면 제거
               logout();
@@ -147,129 +125,9 @@ function MainPage() {
       fetchUserInfo();
     }, []);
 
-    useEffect(() => {
-      const token = getToken();
-      if (token === null) {
-        return;
-      }
+  
+  
 
-      if (okxService !== null) {
-        UserServices.getUserMe(isDemo).then((userData) => {
-          //console.log("!!!!!!!userData!!!!!!!!", userData);
-          if (userData === null) {
-            return;
-          }
-          okxService.disconnect();
-          okxService.setIsSandbox(isDemo, userData.okx_api_key, userData.okx_api_secret, userData.okx_api_passphrase);
-          okxService.connect();
-        });
-      }
-    }, [isDemo]);
-  
-    // OKX 연결 초기화
-    const initializeOKXConnection = async (userData) => {
-      try {
-        if (okxService === null) {
-          return;
-        }
-        
-        // 실제 API 키가 있으면 실제 연결, 없으면 테스트 모드
-        if (userData.okx_api_key && userData.okx_api_secret && userData.okx_api_passphrase) {
-          //console.log("!!!!!!!initializeOKXConnection!!!!!!!!", isDemo);
-          const initialized = okxService.initialize(
-            userData.okx_api_key,
-            userData.okx_api_secret,
-            userData.okx_api_passphrase,
-            isDemo
-          );
-  
-          if (initialized) {
-            // 전역 OKX API 인스턴스 설정 (차트에서 사용)
-            window.okxApi = okxService.api;
-            
-            // 초기 데모 모드 설정
-            if (window.okxApi && window.okxApi.setSandboxMode) {
-              window.okxApi.setSandboxMode(isDemo);
-            }
-            
-            // 이벤트 핸들러 설정
-            okxService.setBalanceUpdateHandler((newBalance) => {
-              setBalance(newBalance);
-            });
-  
-            okxService.setConnectionChangeHandler((connected) => {
-              setOkxConnected(connected);
-            });
-  
-            okxService.setPositionUpdateHandler((newPositions) => {
-              setPositions(newPositions);
-            });
-  
-            okxService.setOrderUpdateHandler((newOrders) => {
-              setOrders(prevOrders => {
-                // 기존 주문 목록에서 업데이트된 주문들을 찾아서 교체
-                const updatedOrders = [...prevOrders];
-                newOrders.forEach(newOrder => {
-                  const existingIndex = updatedOrders.findIndex(order => order.ordId === newOrder.ordId);
-                  if (existingIndex >= 0) {
-                    updatedOrders[existingIndex] = newOrder;
-                  } else {
-                    updatedOrders.push(newOrder);
-                  }
-                });
-                return updatedOrders;
-              });
-            });
-  
-            // fills는 VIP5 이상 필요하므로 제거됨
-  
-            // 연결 시작
-            await okxService.connect();
-          } else {
-            setOkxConnected(false);
-          }
-        } /*else {
-          
-          // 테스트 모드 사용
-          okxService.setBalanceUpdateHandler((newBalance) => {
-            setBalance(newBalance);
-          });
-  
-          okxService.setConnectionChangeHandler((connected) => {
-            setOkxConnected(connected);
-          });
-  
-          okxService.setPositionUpdateHandler((newPositions) => {
-            setPositions(newPositions);
-          });
-  
-          okxService.setOrderUpdateHandler((newOrders) => {
-            setOrders([]);
-          });
-  
-          // fills 핸들러 제거됨
-  
-          okxService.initializeTestMode();
-        }*/ 
-      } catch (error) {
-        setOkxConnected(false);
-      }
-    };
-  
-    // 컴포넌트 언마운트 시 연결 해제
-    useEffect(() => {
-      return () => {
-        okxService.disconnect();
-      };
-    }, []);
-
-    // isDemoAtom 변경 시 okxApi의 sandbox 모드 동기화
-    useEffect(() => {
-      if (window.okxApi && window.okxApi.setSandboxMode) {
-        console.log('isDemoAtom 변경됨:', isDemo, '→ okxApi.isSandbox 업데이트');
-        window.okxApi.setSandboxMode(isDemo);
-      }
-    }, [isDemo]);
   
     const toggleTheme = () => {
       setIsDarkMode(!isDarkMode);
@@ -301,34 +159,6 @@ function MainPage() {
             // 임시로 브로커 역할 추가 (실제 환경에서는 서버에서 전달받음)
             setUser(userInfo);
             
-            // OKX API 키가 있으면 실제 연결, 없으면 테스트 모드
-            if (userInfo.okx_api_key && userInfo.okx_api_secret && userInfo.okx_api_passphrase) {
-              initializeOKXConnection(userInfo);
-            } 
-            /*
-            else {
-              // 테스트 모드 사용
-              okxService.setBalanceUpdateHandler((newBalance) => {
-                setBalance(newBalance);
-              });
-  
-              okxService.setConnectionChangeHandler((connected) => {
-                setOkxConnected(connected);
-              });
-  
-              okxService.setPositionUpdateHandler((newPositions) => {
-                setPositions(newPositions);
-              });
-  
-              okxService.setOrderUpdateHandler((newOrders) => {
-                setOrders([]);
-              });
-  
-              // fills 핸들러 제거됨
-  
-              okxService.initializeTestMode();
-            }
-            */
           } else {
             setUser(userData); // 기본 사용자 정보라도 설정
           }
@@ -348,9 +178,6 @@ function MainPage() {
     const handleLogout = () => {
       logout();
       setUser(null);
-      setOkxConnected(false);
-      setBalance(null);
-      okxService.disconnect();
       window.location.href = '/';
     };
   
@@ -366,10 +193,6 @@ function MainPage() {
             // 임시로 브로커 역할 추가 (실제 환경에서는 서버에서 전달받음)
             setUser(userInfo);
             
-            // OKX 연결 초기화
-            if (userInfo.okx_api_key && userInfo.okx_api_secret && userInfo.okx_api_passphrase) {
-              initializeOKXConnection(userInfo);
-            }
           }
         }
       } catch (error) {
@@ -377,35 +200,6 @@ function MainPage() {
       }
     };
   
-    // 잔액 표시 포맷팅 - Equity(순자산) 표시
-    const formatBalance = (balanceData) => {
-      if (!balanceData || !balanceData.data || balanceData.data.length === 0) {
-        return '$0.00';
-      }
-  
-      const accountData = balanceData.data[0];
-      
-      // details가 없으면 기본값 반환
-      if (!accountData.details || accountData.details.length === 0) {
-        return '$0.00';
-      }
-  
-      // 1. USDT의 eq (순자산) 표시
-      const usdtBalance = accountData.details.find(d => d.ccy === 'USDT');
-      if (usdtBalance && usdtBalance.eq) {
-        const amount = parseFloat(usdtBalance.eq);
-        return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-      }
-  
-      // 2. 첫 번째 사용 가능한 equity 표시 (다른 통화)
-      const firstBalance = accountData.details.find(d => d.eq && parseFloat(d.eq) > 0);
-      if (firstBalance) {
-        const amount = parseFloat(firstBalance.eq);
-        return `${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${firstBalance.ccy}`;
-      }
-  
-      return '$0.00';
-    };
   
     return (
       <div className="min-h-screen bg-background">
@@ -567,15 +361,11 @@ function MainPage() {
               <Route 
                 path="/create" 
                 element={
-                  <Dashboard 
+                  <Dashboard
                     isDarkMode={isDarkMode}
                     user={user}
                     onShowOKXModal={() => setShowOKXModal(true)}
                     onLogout={handleLogout}
-                    okxConnected={okxConnected}
-                    balance={balance}
-                    positions={positions}
-                    orders={orders}
                   />
                 } 
               />
@@ -587,10 +377,6 @@ function MainPage() {
                     user={user}
                     onShowOKXModal={() => setShowOKXModal(true)}
                     onLogout={handleLogout}
-                    okxConnected={okxConnected}
-                    balance={balance}
-                    positions={positions}
-                    orders={orders}
                     onShowLoginModal={() => setShowAuthModal(true)}
                   />
                 } 
