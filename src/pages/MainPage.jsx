@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 
-import { 
-  Wallet,
-  Activity,
+import {
   Sun,
   Moon,
   LogIn,
   LogOut,
-  User,
-  Link,
-  MessageCircle
+  User
 } from 'lucide-react';
 import Dashboard from './Dashboard';
 import BotManagementPage from './BotManagementPage';
@@ -28,7 +24,6 @@ import okxService from '../lib/okxService';
 import UserServices from '../services/userServices';
 import { useAtomValue } from 'jotai';
 import { isDemoAtom } from '../store/isDemoStore';
-import IsDemoView from './components/IsDemoView';
 
 
 import { getToken, isTokenExpired, isTokenExpiringSoon, refreshToken, logout } from '../lib/authUtils';
@@ -50,11 +45,7 @@ function MainPage() {
   
     // 현재 라우트에 따른 헤더 top 값 결정
     const getHeaderTopClass = () => {
-      if (location.pathname === '/') {
-        return 'top-0'; // 루트 라우트에서는 top-0
-      } else {
-        return !user ? 'top-12' : 'top-0'; // 다른 라우트에서는 기존 로직 유지
-      }
+      return 'top-0'; // 모든 경우 top-0으로 고정
     };
   
     // 토큰 갱신 로직
@@ -345,12 +336,12 @@ function MainPage() {
           setUser(userData); // 기본 사용자 정보라도 설정
         }
         
-        // 로그인 후 /create 페이지로 리디렉션
-        window.location.href = '/create';
+        // 로그인 후 /admin 페이지로 리디렉션
+        window.location.href = '/admin';
       } catch (error) {
         setUser(userData); // 기본 사용자 정보라도 설정
-        // 로그인 후 /create 페이지로 리디렉션
-        window.location.href = '/create';
+        // 로그인 후 /admin 페이지로 리디렉션
+        window.location.href = '/admin';
       }
     };
   
@@ -360,6 +351,7 @@ function MainPage() {
       setOkxConnected(false);
       setBalance(null);
       okxService.disconnect();
+      window.location.href = '/';
     };
   
     const handleOKXSuccess = async (okxAccount) => {
@@ -423,8 +415,8 @@ function MainPage() {
               {/* 메인 헤더 라인 */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-1 sm:space-x-3">
-                  <button 
-                    onClick={() => window.location.href = user ? '/create' : '/'}
+                  <button
+                    onClick={() => window.location.href = user ? '/admin' : '/'}
                     className="hover:opacity-80 transition-opacity cursor-pointer"
                   >
                                         <div>
@@ -447,23 +439,6 @@ function MainPage() {
                     <span>powered by META Prophet</span>
                   </button>
                   
-                  <IsDemoView />
-                  
-                  {/* 로그인한 사용자에게만 표시되는 요소들 */}
-                  {user && (
-                    <>
-                      <div className={`flex items-center space-x-2 ${okxConnected ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                        <Activity size={16} />
-                        <span className="text-sm">{okxConnected ? 'OKX 연결됨' : 'OKX 연결 안됨'}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Wallet size={16} className="text-primary" />
-                        <span className="text-foreground text-sm font-medium">
-                          {balance ? formatBalance(balance) : '$0.00'}
-                        </span>
-                      </div>
-                    </>
-                  )}
 
                   {/* 사용자 정보 또는 로그인 버튼 */}
                   {user ? (
@@ -473,35 +448,9 @@ function MainPage() {
                         <div className="flex items-center space-x-2">
                           <User size={16} className="text-primary" />
                           <span className="text-foreground text-sm font-medium">{user.email}</span>
-                          {/* 임시 역할 변경 드롭다운 */}
-                          <select 
-                            value={user.role || 'user'} 
-                            onChange={(e) => setUser({...user, role: e.target.value})}
-                            className="text-xs bg-accent text-foreground border border-border rounded px-2 py-1"
-                          >
-                            <option value="user">사용자</option>
-                            <option value="broker">브로커</option>
-                            <option value="admin">관리자</option>
-                          </select>
+                          <span className="text-xs bg-accent text-foreground border border-border rounded px-2 py-1">관리자</span>
                         </div>
-                        
-                        <button
-                          onClick={() => setShowOKXModal(true)}
-                          className="btn-secondary flex items-center space-x-2 px-3 py-2 text-sm"
-                          title="OKX 계정 연동"
-                        >
-                          <Link size={14} />
-                          <span>OKX 계정 연동</span>
-                        </button>
-                        
-                        <button
-                          onClick={() => setShowOKXConnectModal(true)}
-                          className="btn-secondary flex items-center space-x-2 px-3 py-2 text-sm"
-                          title="OKX 계정 직접 연결"
-                        >
-                          <Link size={14} />
-                          <span>OKX 계정 직접 연결</span>
-                        </button>
+
                         <button
                           onClick={handleLogout}
                           className="btn-ghost p-2 rounded-md hover:bg-accent"
@@ -523,25 +472,13 @@ function MainPage() {
                       </div>
                     </>
                   ) : (
-                    <div className="flex items-center space-x-2 sm:space-x-3">
-                      {/* 가입 신청 버튼 */}
-                      <button
-                        onClick={() => window.open('https://t.me/winwin_bot', '_blank')}
-                        className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 sm:px-3.5 py-1.5 sm:py-2 rounded-md sm:rounded-lg text-xs sm:text-sm font-medium shadow hover:from-green-600 hover:to-emerald-700 transition-all duration-200 flex items-center"
-                        title="가입 신청"
-                      >
-                        <MessageCircle className="w-4 h-4" />
-                        <span className="ml-1">가입 신청</span>
-                      </button>
-                      {/* 로그인 버튼 */}
-                      <button
-                        onClick={() => setShowAuthModal(true)}
-                        className="btn-primary flex items-center px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm rounded-md sm:rounded-lg"
-                      >
-                        <LogIn className="w-4 h-4" />
-                        <span className="ml-1">로그인</span>
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => setShowAuthModal(true)}
+                      className="btn-primary flex items-center px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm rounded-md sm:rounded-lg"
+                    >
+                      <LogIn className="w-4 h-4" />
+                      <span className="ml-1">로그인</span>
+                    </button>
                   )}
                   
                   <button
@@ -553,46 +490,6 @@ function MainPage() {
                 </div>
               </div>
               
-              {/* 모바일에서 로그인한 사용자를 위한 두 번째 줄 */}
-              {user && (
-                <div className="sm:hidden flex items-center justify-between mt-2 pt-2 border-t border-border/50">
-                  {/* 왼쪽: 사용자 정보와 역할 선택 */}
-                  <div className="flex items-center space-x-1.5">
-                    <User className="w-4 h-4 text-primary flex-shrink-0" />
-                    <span className="text-xs font-medium truncate max-w-[120px]">{user.email}</span>
-                    <select 
-                      value={user.role || 'user'} 
-                      onChange={(e) => setUser({...user, role: e.target.value})}
-                      className="text-[11px] bg-accent text-foreground border border-border rounded px-1 py-0.5 font-medium"
-                    >
-                      <option value="user">사용자</option>
-                      <option value="broker">브로커</option>
-                      <option value="admin">관리자</option>
-                    </select>
-                  </div>
-                  
-                  {/* 오른쪽: OKX 연동 버튼들 */}
-                  <div className="flex items-center space-x-1">
-                    <span className="text-xs text-muted-foreground mr-1">OKX:</span>
-                    <button
-                      onClick={() => setShowOKXModal(true)}
-                      className="btn-secondary flex items-center space-x-1 px-2 py-1 text-xs rounded-md"
-                      title="OKX 계정 OAuth 연동"
-                    >
-                      <Link className="w-3.5 h-3.5" />
-                      <span>OAuth</span>
-                    </button>
-                    <button
-                      onClick={() => setShowOKXConnectModal(true)}
-                      className="btn-secondary flex items-center space-x-1 px-2 py-1 text-xs rounded-md"
-                      title="OKX API 키 직접 입력"
-                    >
-                      <Link className="w-3.5 h-3.5" />
-                      <span>API키</span>
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           </header>
   
@@ -603,40 +500,28 @@ function MainPage() {
               <nav className="fixed top-[56px] left-0 right-0 z-40 hidden md:block border-b bg-card/30 backdrop-blur supports-[backdrop-filter]:bg-card/40">
                 <div className="px-3 py-2">
                   <div className="flex space-x-6">
-                    {/* 기본 메뉴 */}
-                    <NavigationLink to="/create" user={user} onShowLoginModal={() => setShowAuthModal(true)}>만들기</NavigationLink>
-                    <NavigationLink to="/bots" user={user} onShowLoginModal={() => setShowAuthModal(true)}>목록</NavigationLink>
-                    
-                    {/* 브로커 전용 메뉴 */}
-                    {(user?.role === 'broker' || user?.role === 'admin') && (
-                      <>
-                        <div className="h-6 w-px bg-border mx-2"></div>
-                        <div className="flex items-center space-x-1 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-200/30 rounded-lg px-3 py-1.5">
-                          <svg className="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
-                          </svg>
-                          <span className="text-sm text-purple-700 font-semibold">브로커 전용</span>
-                          <div className="w-1 h-1 bg-purple-500 rounded-full animate-pulse"></div>
-                        </div>
-                        <NavigationLink to="/broker/revenue" user={user} onShowLoginModal={() => setShowAuthModal(true)}>나의 수익</NavigationLink>
-                        <NavigationLink to="/broker/network" user={user} onShowLoginModal={() => setShowAuthModal(true)}>하위 브로커 정산</NavigationLink>
-                      </>
-                    )}
-                    
-                    {/* 관리자 전용 메뉴 */}
-                    {user?.role === 'admin' && (
-                      <>
-                        <div className="h-6 w-px bg-border mx-2"></div>
-                        <div className="flex items-center space-x-1 bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-200/30 rounded-lg px-3 py-1.5">
-                          <svg className="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                          <span className="text-sm text-red-700 font-semibold">관리자 전용</span>
-                          <div className="w-1 h-1 bg-red-500 rounded-full animate-pulse"></div>
-                        </div>
-                        <NavigationLink to="/admin" user={user} onShowLoginModal={() => setShowAuthModal(true)}>시스템 관리</NavigationLink>
-                      </>
-                    )}
+                    {/* 브로커 메뉴 */}
+                    <div className="flex items-center space-x-1 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-200/30 rounded-lg px-3 py-1.5">
+                      <svg className="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-sm text-purple-700 font-semibold">브로커 전용</span>
+                      <div className="w-1 h-1 bg-purple-500 rounded-full animate-pulse"></div>
+                    </div>
+                    <NavigationLink to="/broker/revenue" user={user} onShowLoginModal={() => setShowAuthModal(true)}>나의 수익</NavigationLink>
+                    <NavigationLink to="/broker/network" user={user} onShowLoginModal={() => setShowAuthModal(true)}>하위 브로커 정산</NavigationLink>
+
+                    <div className="h-6 w-px bg-border mx-2"></div>
+
+                    {/* 관리자 메뉴 */}
+                    <div className="flex items-center space-x-1 bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-200/30 rounded-lg px-3 py-1.5">
+                      <svg className="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-sm text-red-700 font-semibold">관리자 전용</span>
+                      <div className="w-1 h-1 bg-red-500 rounded-full animate-pulse"></div>
+                    </div>
+                    <NavigationLink to="/admin" user={user} onShowLoginModal={() => setShowAuthModal(true)}>시스템 관리</NavigationLink>
                   </div>
                 </div>
               </nav>
@@ -645,32 +530,20 @@ function MainPage() {
               <nav className="fixed top-[90px] sm:top-[88px] left-0 right-0 z-40 md:hidden border-b bg-card/95 backdrop-blur">
                 <div className="px-2 py-1.5">
                   <div className="flex items-center justify-start space-x-2 overflow-x-auto scrollbar-hide">
-                    {/* 기본 메뉴 */}
-                    <MobileNavLink to="/create" user={user} onShowLoginModal={() => setShowAuthModal(true)}>만들기</MobileNavLink>
-                    <MobileNavLink to="/bots" user={user} onShowLoginModal={() => setShowAuthModal(true)}>목록</MobileNavLink>
-                    
-                    {/* 브로커 전용 메뉴 */}
-                    {(user?.role === 'broker' || user?.role === 'admin') && (
-                      <>
-                        <div className="h-4 w-px bg-border mx-1"></div>
-                        <MobileNavLink to="/broker/revenue" user={user} onShowLoginModal={() => setShowAuthModal(true)} colorTheme="broker">
-                          나의 수익
-                        </MobileNavLink>
-                        <MobileNavLink to="/broker/network" user={user} onShowLoginModal={() => setShowAuthModal(true)} colorTheme="broker">
-                          하위브로커 정산
-                        </MobileNavLink>
-                      </>
-                    )}
-                    
-                    {/* 관리자 전용 메뉴 */}
-                    {user?.role === 'admin' && (
-                      <>
-                        <div className="h-4 w-px bg-border mx-1"></div>
-                        <MobileNavLink to="/admin" user={user} onShowLoginModal={() => setShowAuthModal(true)} colorTheme="admin">
-                          시스템 관리
-                        </MobileNavLink>
-                      </>
-                    )}
+                    {/* 브로커 메뉴 */}
+                    <MobileNavLink to="/broker/revenue" user={user} onShowLoginModal={() => setShowAuthModal(true)} colorTheme="broker">
+                      나의 수익
+                    </MobileNavLink>
+                    <MobileNavLink to="/broker/network" user={user} onShowLoginModal={() => setShowAuthModal(true)} colorTheme="broker">
+                      하위브로커 정산
+                    </MobileNavLink>
+
+                    <div className="h-4 w-px bg-border mx-1"></div>
+
+                    {/* 관리자 메뉴 */}
+                    <MobileNavLink to="/admin" user={user} onShowLoginModal={() => setShowAuthModal(true)} colorTheme="admin">
+                      시스템 관리
+                    </MobileNavLink>
                   </div>
                 </div>
               </nav>
@@ -679,11 +552,11 @@ function MainPage() {
   
           {/* 메인 콘텐츠 - 라우트와 로그인 상태에 따라 패딩 조정 */}
           <main className={
-            location.pathname === '/' 
-              ? "pt-0" 
-              : (user 
-                  ? "pt-[125px] sm:pt-[125px] md:pt-[109px]"  // 모바일: header(90px) + nav(35px), sm: header(88px) + nav(37px), 데스크톱: header(56px) + nav(53px)
-                  : "pt-[68px]")
+            location.pathname === '/'
+              ? "pt-0"
+              : (user
+                  ? "pt-[125px] sm:pt-[125px] md:pt-[109px]"
+                  : "pt-16")
           }>
             {/* 라우트 */}
             <Routes>
