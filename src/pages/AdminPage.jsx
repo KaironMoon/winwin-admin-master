@@ -559,12 +559,18 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
             <form onSubmit={(e) => {
               e.preventDefault();
               const formData = new FormData(e.target);
-              handleEditUser({
+              const userData = {
                 name: formData.get('name'),
                 email: formData.get('email'),
                 level: formData.get('level'),
                 is_active: formData.get('is_active') === 'true'
-              });
+              };
+              // 비밀번호가 입력된 경우에만 포함
+              const password = formData.get('password');
+              if (password) {
+                userData.password = password;
+              }
+              handleEditUser(userData);
             }}>
               <div className="space-y-4">
                 <div>
@@ -582,6 +588,18 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
                     type="email"
                     name="email"
                     defaultValue={selectedUser.email}
+                    className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    새 비밀번호
+                    <span className="text-xs text-muted-foreground ml-2">(변경 시에만 입력)</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="password"
+                    placeholder="비밀번호를 변경하려면 입력하세요"
                     className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground"
                   />
                 </div>
