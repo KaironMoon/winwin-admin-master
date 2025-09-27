@@ -16,7 +16,7 @@ import {
   calculateStopLoss
 } from '../lib/botUtils';
 import { saveBotSettings, loadBotSettings, clearBotSettings, saveEntryData, loadEntryData, clearEntryData } from '../lib/utils';
-import { isDemoAtom } from '../store/isDemoStore';
+import { isDemoAtom } from '../stores/isDemoStore';
 import { useAtomValue } from 'jotai';
 
 

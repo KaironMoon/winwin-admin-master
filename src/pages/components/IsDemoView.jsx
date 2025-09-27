@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Play, Square } from 'lucide-react';
 
 import { useAtomValue, useSetAtom } from 'jotai';
-import { isDemoAtom, setIsDemoAtom } from '../../store/isDemoStore';
+import { isDemoAtom, setIsDemoAtom } from '../../stores/isDemoStore';
 
 function IsDemoView() {
     const isDemo = useAtomValue(isDemoAtom);

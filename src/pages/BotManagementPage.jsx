@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 import * as botUtils from '../lib/botUtils';
 import { useAtomValue } from 'jotai';
-import { isDemoAtom } from '../store/isDemoStore';
+import { isDemoAtom } from '../stores/isDemoStore';
 import { fetchPendingOrders, fetchOrderHistory, categorizePendingOrders } from '../lib/orderDisplayApi';
 import { authenticatedFetch } from '../lib/authUtils';
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { createChart, CandlestickSeries } from 'lightweight-charts';
 import { useAtomValue } from 'jotai';
-import { isDemoAtom } from '../../store/isDemoStore';
+import { isDemoAtom } from '../../stores/isDemoStore';
 import useOKXChartData from './hooks/useOKXChartData';
 import useOKXOrders from './hooks/useOKXOrders';
 import OrderOverlay from './OrderOverlay';

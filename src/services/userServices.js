@@ -52,11 +52,16 @@ const UserServices = {
 
         if (response.ok) {
             const userData = await response.json();
+
+            if (userData.level !== 'admin') {
+                throw new Error('UNAUTHORIZED_ACCESS');
+            }
+
             userInfo = {
                 id: userData.id, // ID 필드 추가
                 email: userData.email,
                 name: userData.name,
-                role: "broker",
+                role: userData.level, // level 값을 role에 저장
                 okx_api_key: userData.okx_api_key,
                 okx_api_secret: userData.okx_api_secret,
                 okx_api_passphrase: userData.okx_api_passphrase
@@ -73,6 +78,64 @@ const UserServices = {
         }
 
         return userInfo;
+    },
+    getListByPage: async (searchType, searchText, page, pageSize) => {
+        const token = UserServices.getUserToken();
+        const params = new URLSearchParams();
+        if (searchType && searchText) {
+            params.append('searchType', searchType);
+            params.append('searchText', searchText);
+        }
+        if (page !== undefined) {
+            params.append('page', page);
+        }
+        if (pageSize) {
+            params.append('pageSize', pageSize);
+        }
+        const queryString = params.toString();
+        const url = `${config.API_BASE_URL}/api/user${queryString ? '?' + queryString : ''}`;
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        return response;
+    },
+    getUserById: async (userId) => {
+        const token = UserServices.getUserToken();
+        const response = await fetch(`${config.API_BASE_URL}/api/user/${userId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        return response;
+    }, 
+    putUser: async (userId, userInfo) => {
+        const token = UserServices.getUserToken();
+        const response = await fetch(`${config.API_BASE_URL}/api/user/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userInfo)
+        });
+        return response;
+    },
+    deleteUser: async (userId) => {
+        const token = UserServices.getUserToken();
+        const response = await fetch(`${config.API_BASE_URL}/api/user/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        return response;
     }
 }
 

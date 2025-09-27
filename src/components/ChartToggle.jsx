@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAtom } from 'jotai';
-import { chartTypeAtom } from '../store/chartTypeStore';
+import { chartTypeAtom } from '../stores/chartTypeStore';
 import { BarChart3, TrendingUp } from 'lucide-react';
 
 const ChartToggle = () => {

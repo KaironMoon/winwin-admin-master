@@ -115,8 +115,9 @@ export const logout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('tokenData');
   localStorage.removeItem('user');
-  // 페이지 새로고침으로 로그인 페이지로 이동
-  window.location.reload();
+  localStorage.removeItem('userInfo');
+  // 랜딩 페이지로 이동
+  window.location.href = '/';
 };
 
 // 인증 헤더를 포함한 fetch 함수

@@ -8,7 +8,6 @@ import {
   LogOut,
   User
 } from 'lucide-react';
-import Dashboard from './Dashboard';
 import BotManagementPage from './BotManagementPage';
 import LandingPage from './LandingPage';
 import BrokerRevenuePage from './BrokerRevenuePage';
@@ -22,7 +21,7 @@ import OKXTestPanel from '../components/OKXTestPanel';
 import MetaProphetModal from '../components/MetaProphetModal';
 import UserServices from '../services/userServices';
 import { useAtomValue } from 'jotai';
-import { isDemoAtom } from '../store/isDemoStore';
+import { isDemoAtom } from '../stores/isDemoStore';
 
 
 import { getToken, isTokenExpired, isTokenExpiringSoon, refreshToken, logout } from '../lib/authUtils';
@@ -60,7 +59,11 @@ function MainPage() {
             if (isTokenExpiringSoon() || isTokenExpired()) {
               try {
                 await refreshToken();
-        
+                // 토큰 갱신 후 권한 재검증
+                const userInfo = await UserServices.getUserMe(isDemo);
+                if (userInfo) {
+                  setUser(userInfo);
+                }
               } catch (error) {
                 console.error('자동 토큰 갱신 실패:', error);
                 // 갱신 실패 시 로그아웃 처리
@@ -103,14 +106,13 @@ function MainPage() {
                 return;
               }
             }
-  
-            console.log("!!!!!!!isDemoyyy!!!!!!!!", isDemo);
+
             const userInfo = await UserServices.getUserMe(isDemo);
-  
+
             if (userInfo !== null) {
               // 임시로 브로커 역할 추가 (실제 환경에서는 서버에서 전달받음)
               setUser(userInfo);
-              
+
             } else {
               // 토큰이 유효하지 않으면 제거
               logout();
@@ -121,7 +123,7 @@ function MainPage() {
           logout();
         }
       };
-  
+
       fetchUserInfo();
     }, []);
 
@@ -152,26 +154,29 @@ function MainPage() {
         // 로그인 후 사용자 정보를 API에서 다시 가져오기
         const token = getToken();
         if (token) {
-          console.log("!!!!!!!isDemoxxx!!!!!!!!", isDemo);
           const userInfo = await UserServices.getUserMe(isDemo);
-  
+
           if (userInfo !== null) {
             // 임시로 브로커 역할 추가 (실제 환경에서는 서버에서 전달받음)
             setUser(userInfo);
-            
+            // 로그인 후 /admin 페이지로 리디렉션
+            window.location.href = '/admin';
           } else {
             setUser(userData); // 기본 사용자 정보라도 설정
           }
         } else {
           setUser(userData); // 기본 사용자 정보라도 설정
         }
-        
-        // 로그인 후 /admin 페이지로 리디렉션
-        window.location.href = '/admin';
       } catch (error) {
-        setUser(userData); // 기본 사용자 정보라도 설정
-        // 로그인 후 /admin 페이지로 리디렉션
-        window.location.href = '/admin';
+        if (error.message === 'UNAUTHORIZED_ACCESS') {
+          alert('관리자 권한이 필요합니다.\n관리자 계정으로 다시 로그인해주세요.');
+          logout();
+          setUser(null);
+        }
+        console.error('로그인 실패:', error);
+        // 로그아웃 처리
+        logout();
+        setUser(null);
       }
     };
   
@@ -186,7 +191,6 @@ function MainPage() {
         // OKX 연동 후 사용자 정보를 API에서 다시 가져오기
         const token = getToken();
         if (token) {
-          console.log("!!!!!!!isDemozzz!!!!!!!!", isDemo);
           const userInfo = await UserServices.getUserMe(isDemo);
   
           if (userInfo !== null) {
@@ -358,19 +362,8 @@ function MainPage() {
                 path="/" 
                 element={<LandingPage onShowLoginModal={() => setShowAuthModal(true)} />}
               />
-              <Route 
-                path="/create" 
-                element={
-                  <Dashboard
-                    isDarkMode={isDarkMode}
-                    user={user}
-                    onShowOKXModal={() => setShowOKXModal(true)}
-                    onLogout={handleLogout}
-                  />
-                } 
-              />
-              <Route 
-                path="/bots" 
+              <Route
+                path="/bots"
                 element={
                   <BotManagementPage
                     isDarkMode={isDarkMode}
@@ -379,19 +372,19 @@ function MainPage() {
                     onLogout={handleLogout}
                     onShowLoginModal={() => setShowAuthModal(true)}
                   />
-                } 
+                }
               />
-              <Route 
-                path="/test" 
+              <Route
+                path="/test"
                 element={
                   <div className="container mx-auto py-6">
                     <OKXTestPanel />
                   </div>
-                } 
+                }
               />
-              <Route 
-                path="/broker/revenue" 
-                element={<BrokerRevenuePage />} 
+              <Route
+                path="/broker/revenue"
+                element={<BrokerRevenuePage />}
               />
               <Route
                 path="/broker/network"
@@ -401,9 +394,9 @@ function MainPage() {
                 path="/broker/network-v1"
                 element={<BrokerNetworkPage />}
               />
-              <Route 
-                path="/admin" 
-                element={<AdminPage />} 
+              <Route
+                path="/admin"
+                element={<AdminPage />}
               />
             </Routes>
           </main>
