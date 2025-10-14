@@ -120,7 +120,7 @@ const AuthModal = ({ isOpen, onClose, onLogin }) => {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-card rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden border border-border"
+          className="bg-card rounded-lg max-w-md w-full mx-4 overflow-hidden border border-border"
           onClick={(e) => e.stopPropagation()}
         >
           {/* 헤더 */}

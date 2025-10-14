@@ -493,9 +493,9 @@ const BrokerNetworkPageOriginal = () => {
               relative overflow-hidden
               ${levelStyle.bg} ${levelStyle.border}
               backdrop-blur-xl bg-opacity-50
-              border rounded-2xl
+              border rounded-lg
               p-4 pr-6
-              hover:shadow-2xl hover:scale-[1.02]
+              hover:scale-[1.02]
               transition-all duration-300 ease-out
               cursor-pointer
             `}
@@ -509,10 +509,10 @@ const BrokerNetworkPageOriginal = () => {
               <div className="relative flex-shrink-0">
                 <div className={`
                   w-12 h-12 ${levelStyle.icon}
-                  rounded-xl shadow-lg
+                  rounded-lg
                   flex items-center justify-center
                   text-white font-bold text-lg
-                  group-hover:shadow-xl group-hover:scale-110
+                  group-hover:scale-110
                   transition-all duration-300
                 `}>
                   {node.user?.name?.charAt(0) || '?'}
@@ -734,14 +734,14 @@ const BrokerNetworkPageOriginal = () => {
                   <div className="mb-8">
                     <div className="relative overflow-hidden max-w-2xl">
                       {/* 글래스모피즘 카드 */}
-                      <div className="relative backdrop-blur-xl bg-gradient-to-r from-purple-900/40 via-indigo-900/40 to-blue-900/40 rounded-3xl border border-purple-500/30 p-6 shadow-2xl">
+                      <div className="relative backdrop-blur-xl bg-gradient-to-r from-purple-900/40 via-indigo-900/40 to-blue-900/40 rounded-lg border border-purple-500/30 p-6">
                         {/* 배경 그라데이션 오버레이 */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-transparent to-blue-600/10 rounded-3xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-transparent to-blue-600/10 rounded-lg" />
 
                         <div className="relative flex items-center gap-5">
                           {/* 프로필 아바타 */}
                           <div className="relative">
-                            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 via-indigo-500 to-blue-500 rounded-2xl shadow-2xl flex items-center justify-center">
+                            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 via-indigo-500 to-blue-500 rounded-lg flex items-center justify-center">
                               <span className="text-white font-bold text-xl">
                                 {hierarchyData.user?.name?.charAt(0) || '나'}
                               </span>

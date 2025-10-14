@@ -109,11 +109,11 @@ const OKXOAuthModal = ({ isOpen, onClose, onSuccess }) => {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden"
+          className="bg-card rounded-lg max-w-md w-full mx-4 overflow-hidden border border-border"
           onClick={(e) => e.stopPropagation()}
         >
           {/* 헤더 */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <div className="flex items-center justify-between p-4 border-b border-border">
             <div className="flex items-center gap-2">
               <Link className="text-primary" size={20} />
               <h2 className="text-xl font-bold text-foreground">

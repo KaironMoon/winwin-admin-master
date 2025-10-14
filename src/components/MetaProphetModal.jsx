@@ -124,11 +124,11 @@ const MetaProphetModal = ({ isOpen, onClose }) => {
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full overflow-hidden"
+        className="bg-card rounded-lg shadow-xl max-w-6xl w-full overflow-hidden border border-border"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 헤더 */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center space-x-3">
             <div className="flex items-center space-x-2 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white text-sm font-medium">
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">

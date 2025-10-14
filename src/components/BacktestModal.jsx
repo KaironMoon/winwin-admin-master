@@ -278,7 +278,7 @@ const BacktestModal = ({ isOpen, onClose, settings, entryData }) => {
       onClick={onClose}
     >
       <div 
-        className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+        className="bg-card rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-border"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 모달 헤더 */}
@@ -317,7 +317,7 @@ const BacktestModal = ({ isOpen, onClose, settings, entryData }) => {
                 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {/* 기본 설정 */}
-                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-5 border border-blue-200 dark:border-blue-800">
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-5 border border-blue-200 dark:border-blue-800">
                     <div className="flex items-center space-x-2 mb-4">
                       <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
                         <BarChart3 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -361,7 +361,7 @@ const BacktestModal = ({ isOpen, onClose, settings, entryData }) => {
                   </div>
 
                   {/* 진입 설정 */}
-                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-5 border border-green-200 dark:border-green-800">
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg p-5 border border-green-200 dark:border-green-800">
                     <div className="flex items-center space-x-2 mb-4">
                       <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
                         <Target className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -413,7 +413,7 @@ const BacktestModal = ({ isOpen, onClose, settings, entryData }) => {
                   </div>
 
                   {/* 자동 재진입 설정 */}
-                  <div className="bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 rounded-xl p-5 border border-purple-200 dark:border-purple-800">
+                  <div className="bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-900/20 dark:to-violet-900/20 rounded-lg p-5 border border-purple-200 dark:border-purple-800">
                     <div className="flex items-center space-x-2 mb-4">
                       <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
                         <RefreshCw className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -472,7 +472,7 @@ const BacktestModal = ({ isOpen, onClose, settings, entryData }) => {
                   </div>
 
                   {/* 익절/손절 설정 */}
-                  <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-xl p-5 border border-orange-200 dark:border-orange-800">
+                  <div className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 rounded-lg p-5 border border-orange-200 dark:border-orange-800">
                     <div className="flex items-center space-x-2 mb-4">
                       <div className="p-2 bg-orange-100 dark:bg-orange-900 rounded-lg">
                         <Shield className="w-5 h-5 text-orange-600 dark:text-orange-400" />

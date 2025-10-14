@@ -50,10 +50,10 @@ const BotCreateButton = ({
             whileTap={{ scale: 0.98 }}
             onClick={handleButtonClick}
             disabled={isCreating || isDisabled}
-            className={`flex-1 py-4 px-6 text-base font-semibold rounded-xl transition-all duration-300 shadow-lg ${
+            className={`flex-1 py-4 px-6 text-base font-semibold rounded-lg transition-all duration-300 ${
               isCreating || isDisabled
-                ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-300 cursor-not-allowed shadow-none'
-                : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white dark:text-white shadow-blue-500/25 dark:shadow-purple-500/25 hover:shadow-xl hover:shadow-blue-500/30 dark:hover:shadow-purple-500/30'
+                ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-300 cursor-not-allowed'
+                : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white dark:text-white'
             }`}
           >
             {isCreating ? (
@@ -79,10 +79,10 @@ const BotCreateButton = ({
             whileTap={{ scale: 0.98 }}
             onClick={handleBacktestButtonClick}
             disabled={isCreating}
-            className={`py-4 px-6 text-base font-semibold rounded-xl transition-all duration-300 shadow-lg ${
+            className={`py-4 px-6 text-base font-semibold rounded-lg transition-all duration-300 ${
               isCreating
-                ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-300 cursor-not-allowed shadow-none'
-                : 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white dark:text-white shadow-green-500/25 dark:shadow-blue-500/25 hover:shadow-xl hover:shadow-green-500/30 dark:hover:shadow-blue-500/30'
+                ? 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-300 cursor-not-allowed'
+                : 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white dark:text-white'
             }`}
           >
             <div className="flex items-center justify-center space-x-2">

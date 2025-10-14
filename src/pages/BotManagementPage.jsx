@@ -2046,9 +2046,9 @@ function BotManagementPage({ isDarkMode, user, onShowOKXModal, onLogout, okxConn
                       return (
                         <div className="space-y-4">
                           {/* 🔥 메인 PnL 강조 영역 */}
-                          <div className={`relative overflow-hidden rounded-xl border-2 p-4 ${
-                            unrealizedPnl >= 0 
-                              ? 'bg-gradient-to-br from-green-500/10 to-green-600/20 border-green-500/30' 
+                          <div className={`relative overflow-hidden rounded-lg border-2 p-4 ${
+                            unrealizedPnl >= 0
+                              ? 'bg-gradient-to-br from-green-500/10 to-green-600/20 border-green-500/30'
                               : 'bg-gradient-to-br from-red-500/10 to-red-600/20 border-red-500/30'
                           }`}>
                             <div className="absolute top-0 right-0 w-20 h-20 opacity-10">

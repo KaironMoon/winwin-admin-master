@@ -15,15 +15,45 @@ const UserServices = {
         return token;
     },
 
-    patchUserMe: async (okx_api_key, okx_api_secret, okx_api_passphrase) => {
+    patchUserMe: async (okx_api_key, okx_api_secret, okx_demo_api_key, okx_demo_api_secret, okx_api_passphrase, name, email, password, currentPassword) => {
         const token = UserServices.getUserToken();
+
+        let requestData = {
+        }
+
+        if (name) {
+            requestData.name = name;
+        }
+        if (email) {
+            requestData.email = email;
+        }
+        if (password) {
+            requestData.password = password;
+            // 비밀번호를 변경하려면 현재 비밀번호도 필요
+            if (currentPassword) {
+                requestData.current_password = currentPassword;
+            }
+        }
+        if (okx_api_key) {
+            requestData.okx_api_key = okx_api_key;
+        }
+        if (okx_api_secret) {
+            requestData.okx_api_secret = okx_api_secret;
+        }
+        if (okx_api_passphrase) {
+            requestData.okx_api_passphrase = okx_api_passphrase;
+        }
+        if (okx_demo_api_key) {
+            requestData.okx_demo_api_key = okx_demo_api_key;
+        }
+        if (okx_demo_api_secret) {
+            requestData.okx_demo_api_secret = okx_demo_api_secret;
+        }
 
         const response = await axios.patch(
             `${config.API_BASE_URL}/api/user/me`,
             {
-              okx_api_key: okx_api_key,
-              okx_api_secret: okx_api_secret,
-              okx_api_passphrase: okx_api_passphrase
+              ...requestData
             },
             {
               headers: {

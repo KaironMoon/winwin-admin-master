@@ -208,7 +208,7 @@ function MainPage() {
     return (
       <div className="min-h-screen bg-background">
           {/* 헤더 - fixed로 변경 */}
-          <header className={`fixed left-0 right-0 z-[60] border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/60 ${getHeaderTopClass()}`}>
+          <header className={`fixed left-0 right-0 z-[60] bg-black ${getHeaderTopClass()}`}>
             <div className="px-2 sm:px-3 py-1.5 sm:py-2">
               {/* 메인 헤더 라인 */}
               <div className="flex items-center justify-between">
@@ -218,8 +218,8 @@ function MainPage() {
                     className="hover:opacity-80 transition-opacity cursor-pointer"
                   >
                                         <div>
-                        <h1 className="text-base sm:text-xl md:text-2xl font-bold text-foreground">
-                          <span className="font-sacheon">MegaBit</span> <span className="hidden md:inline-block text-xs sm:text-sm text-muted-foreground">AI Trader</span>
+                        <h1 className="text-base sm:text-xl md:text-2xl font-bold text-white">
+                          <span className="font-sacheon">MegaBit</span> <span className="hidden md:inline-block text-xs sm:text-sm text-gray-400">AI Trader</span>
                         </h1>
                       </div>
                   </button>
@@ -229,7 +229,7 @@ function MainPage() {
                   {/* META Prophet 버튼 - 모든 사용자에게 표시 */}
                   <button
                     onClick={() => setShowMetaProphetModal(true)}
-                    className="hidden sm:flex items-center space-x-1 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white text-sm font-medium shadow-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-200 cursor-pointer"
+                    className="hidden sm:flex items-center space-x-1 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white text-sm font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-200 cursor-pointer"
                   >
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
@@ -244,14 +244,14 @@ function MainPage() {
                       {/* 데스크톱에서만 표시 - 한 줄에 모든 요소 */}
                       <div className="hidden sm:flex items-center space-x-3">
                         <div className="flex items-center space-x-2">
-                          <User size={16} className="text-primary" />
-                          <span className="text-foreground text-sm font-medium">{user.email}</span>
-                          <span className="text-xs bg-accent text-foreground border border-border rounded px-2 py-1">관리자</span>
+                          <User size={16} className="text-gray-400" />
+                          <span className="text-white text-sm font-medium">{user.email}</span>
+                          <span className="text-xs bg-gray-800 text-gray-300 border border-gray-700 rounded px-2 py-1">관리자</span>
                         </div>
 
                         <button
                           onClick={handleLogout}
-                          className="btn-ghost p-2 rounded-md hover:bg-accent"
+                          className="text-gray-400 hover:text-white p-2 rounded-md hover:bg-gray-800 transition-colors"
                           title="로그아웃"
                         >
                           <LogOut size={16} />
@@ -262,7 +262,7 @@ function MainPage() {
                       <div className="flex sm:hidden items-center space-x-1">
                         <button
                           onClick={handleLogout}
-                          className="btn-ghost p-1.5 rounded-md hover:bg-accent"
+                          className="text-gray-400 hover:text-white p-1.5 rounded-md hover:bg-gray-800 transition-colors"
                           title="로그아웃"
                         >
                           <LogOut className="w-4 h-4" />
@@ -281,7 +281,7 @@ function MainPage() {
                   
                   <button
                     onClick={toggleTheme}
-                    className="btn-ghost p-2 rounded-md hidden md:block"
+                    className="text-gray-400 hover:text-white p-2 rounded-md hover:bg-gray-800 transition-colors hidden md:block"
                   >
                     {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
                   </button>
@@ -295,29 +295,29 @@ function MainPage() {
           {user && location.pathname !== '/' && (
             <>
               {/* 데스크톱 네비게이션 */}
-              <nav className="fixed top-[56px] left-0 right-0 z-40 hidden md:block border-b bg-card/30 backdrop-blur supports-[backdrop-filter]:bg-card/40">
+              <nav className="fixed top-[51px] left-0 right-0 z-40 hidden md:block bg-black border-b border-gray-800">
                 <div className="px-3 py-2">
                   <div className="flex space-x-6">
                     {/* 브로커 메뉴 */}
-                    <div className="flex items-center space-x-1 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 border border-purple-200/30 rounded-lg px-3 py-1.5">
-                      <svg className="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                    <div className="flex items-center space-x-1 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-400/40 rounded-lg px-3 py-1.5">
+                      <svg className="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
                       </svg>
-                      <span className="text-sm text-purple-700 font-semibold">브로커 전용</span>
-                      <div className="w-1 h-1 bg-purple-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm text-purple-300 font-semibold">브로커 전용</span>
+                      <div className="w-1 h-1 bg-purple-400 rounded-full animate-pulse"></div>
                     </div>
                     <NavigationLink to="/broker/revenue" user={user} onShowLoginModal={() => setShowAuthModal(true)}>나의 수익</NavigationLink>
                     <NavigationLink to="/broker/network" user={user} onShowLoginModal={() => setShowAuthModal(true)}>하위 브로커 정산</NavigationLink>
 
-                    <div className="h-6 w-px bg-border mx-2"></div>
+                    <div className="h-6 w-px bg-gray-800 mx-2"></div>
 
                     {/* 관리자 메뉴 */}
-                    <div className="flex items-center space-x-1 bg-gradient-to-r from-red-500/10 to-orange-500/10 border border-red-200/30 rounded-lg px-3 py-1.5">
-                      <svg className="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                    <div className="flex items-center space-x-1 bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-400/40 rounded-lg px-3 py-1.5">
+                      <svg className="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
-                      <span className="text-sm text-red-700 font-semibold">관리자 전용</span>
-                      <div className="w-1 h-1 bg-red-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm text-red-300 font-semibold">관리자 전용</span>
+                      <div className="w-1 h-1 bg-red-400 rounded-full animate-pulse"></div>
                     </div>
                     <NavigationLink to="/admin" user={user} onShowLoginModal={() => setShowAuthModal(true)}>시스템 관리</NavigationLink>
                   </div>
@@ -325,7 +325,7 @@ function MainPage() {
               </nav>
 
               {/* 모바일 네비게이션 */}
-              <nav className="fixed top-[90px] sm:top-[88px] left-0 right-0 z-40 md:hidden border-b bg-card/95 backdrop-blur">
+              <nav className="fixed top-[90px] sm:top-[88px] left-0 right-0 z-40 md:hidden bg-black border-b border-gray-800">
                 <div className="px-2 py-1.5">
                   <div className="flex items-center justify-start space-x-2 overflow-x-auto scrollbar-hide">
                     {/* 브로커 메뉴 */}
@@ -336,7 +336,7 @@ function MainPage() {
                       하위브로커 정산
                     </MobileNavLink>
 
-                    <div className="h-4 w-px bg-border mx-1"></div>
+                    <div className="h-4 w-px bg-gray-800 mx-1"></div>
 
                     {/* 관리자 메뉴 */}
                     <MobileNavLink to="/admin" user={user} onShowLoginModal={() => setShowAuthModal(true)} colorTheme="admin">
@@ -453,7 +453,7 @@ function MainPage() {
     return (
       <button
         onClick={handleClick}
-        className="text-muted-foreground hover:text-foreground px-3 py-2 rounded-md text-sm font-medium transition-colors"
+        className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
       >
         {children}
       </button>
@@ -484,17 +484,17 @@ function MainPage() {
     // 색상 테마별 스타일 정의
     const getThemeStyles = () => {
       if (colorTheme === 'broker') {
-        return isActive 
-          ? 'bg-purple-600 text-white' 
-          : 'text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30';
+        return isActive
+          ? 'bg-purple-600 text-white'
+          : 'text-purple-300 hover:bg-purple-950/30 hover:text-purple-200';
       } else if (colorTheme === 'admin') {
-        return isActive 
-          ? 'bg-red-600 text-white' 
-          : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30';
+        return isActive
+          ? 'bg-red-600 text-white'
+          : 'text-red-300 hover:bg-red-950/30 hover:text-red-200';
       } else {
-        return isActive 
-          ? 'bg-primary text-primary-foreground' 
-          : 'text-muted-foreground hover:text-foreground hover:bg-accent';
+        return isActive
+          ? 'bg-primary text-primary-foreground'
+          : 'text-gray-300 hover:text-white hover:bg-gray-800';
       }
     };
   
