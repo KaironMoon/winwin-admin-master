@@ -28,7 +28,7 @@ import { getToken, isTokenExpired, isTokenExpiringSoon, refreshToken, logout } f
 
 function MainPage() {
     const location = useLocation();
-    const [isDarkMode, setIsDarkMode] = useState(true);
+    const [isDarkMode, setIsDarkMode] = useState(false);
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [showOKXModal, setShowOKXModal] = useState(false);
     const [showOKXConnectModal, setShowOKXConnectModal] = useState(false);
