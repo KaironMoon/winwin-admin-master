@@ -14,6 +14,7 @@ import BrokerRevenuePage from './BrokerRevenuePage';
 import BrokerNetworkPage from './BrokerNetworkPage';
 import BrokerNetworkTreeView from './BrokerNetworkTreeView';
 import AdminPage from './AdminPage';
+import ReferralTreePage from './ReferralTreePage';
 import AuthModal from '../components/AuthModal';
 import OKXOAuthModal from '../components/OKXOAuthModal';
 import OKXConnectModal from '../components/OKXConnectModal';
@@ -207,7 +208,8 @@ function MainPage() {
   
     return (
       <div className="min-h-screen bg-background">
-          {/* 헤더 - fixed로 변경 */}
+          {/* 헤더 - fixed로 변경 (제휴라인 페이지 제외) */}
+          {location.pathname !== '/referral-tree' && (
           <header className={`fixed left-0 right-0 z-[60] bg-black ${getHeaderTopClass()}`}>
             <div className="px-2 sm:px-3 py-1.5 sm:py-2">
               {/* 메인 헤더 라인 */}
@@ -290,9 +292,10 @@ function MainPage() {
               
             </div>
           </header>
-  
-          {/* 네비게이션 - 로그인한 사용자에게만 표시 (루트 라우트 제외) */}
-          {user && location.pathname !== '/' && (
+          )}
+
+          {/* 네비게이션 - 로그인한 사용자에게만 표시 (루트 라우트 및 제휴라인 페이지 제외) */}
+          {user && location.pathname !== '/' && location.pathname !== '/referral-tree' && (
             <>
               {/* 데스크톱 네비게이션 */}
               <nav className="fixed top-[51px] left-0 right-0 z-40 hidden md:block bg-black border-b border-gray-800">
@@ -350,7 +353,7 @@ function MainPage() {
   
           {/* 메인 콘텐츠 - 라우트와 로그인 상태에 따라 패딩 조정 */}
           <main className={
-            location.pathname === '/'
+            location.pathname === '/' || location.pathname === '/referral-tree'
               ? "pt-0"
               : (user
                   ? "pt-[125px] sm:pt-[125px] md:pt-[109px]"
@@ -397,6 +400,10 @@ function MainPage() {
               <Route
                 path="/admin"
                 element={<AdminPage />}
+              />
+              <Route
+                path="/referral-tree"
+                element={<ReferralTreePage />}
               />
             </Routes>
           </main>

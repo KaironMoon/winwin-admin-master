@@ -16,7 +16,8 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  FileText
 } from 'lucide-react';
 import UserServices from '../services/userServices';
 
@@ -325,7 +326,28 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">-</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{user.name || '-'}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">Lvl.{user.referrer_depth || '-'}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{user.referral_count || '0'}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                            <div className="flex items-center space-x-2">
+                              <span>{user.referral_count || '0'}</span>
+                              <button
+                                onClick={() => {
+                                  const width = 1200;
+                                  const height = 800;
+                                  const left = (window.screen.width - width) / 2;
+                                  const top = (window.screen.height - height) / 2;
+                                  window.open(
+                                    `/referral-tree?user_id=${user.id}`,
+                                    `referral_tree_${user.id}`,
+                                    `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+                                  );
+                                }}
+                                className="text-primary hover:text-primary/80 transition-colors"
+                                title="제휴라인 조회"
+                              >
+                                <FileText size={16} />
+                              </button>
+                            </div>
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{user.trading_wallet || '-'}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{user.symbol_count || '-'}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{user.bot_count || '-'}</td>
