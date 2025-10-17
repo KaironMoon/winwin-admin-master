@@ -293,8 +293,16 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
                     <thead className="bg-muted/50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">ID</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">okx uid</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">가입일자</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">초대자코드</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">활동시작일</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">이름</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">이메일</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">수수료계층</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">제휴라인</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">wallet</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">symbol</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">ai-bot</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">레벨</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">상태</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">마지막 로그인</th>
@@ -305,8 +313,22 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
                       {users.map((user) => (
                         <tr key={user.id} className="hover:bg-muted/50">
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{user.id}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{user.okx_uid}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                           {user.created_at ? new Date(user.created_at).toLocaleString('ko-KR', {
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit'
+                            }) : '-'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{user.referral_code}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">-</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{user.name || '-'}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{user.email}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">Lvl.{user.referrer_depth || '-'}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{user.referral_count || '0'}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{user.trading_wallet || '-'}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{user.symbol_count || '-'}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{user.bot_count || '-'}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                               user.level === 'admin'
