@@ -122,6 +122,7 @@ const UserServices = {
         if (pageSize) {
             params.append('pageSize', pageSize);
         }
+        params.append('with_statistics', 'true');
         const queryString = params.toString();
         const url = `${config.API_BASE_URL}/api/user${queryString ? '?' + queryString : ''}`;
         const response = await fetch(url, {

@@ -302,6 +302,7 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">수수료계층</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">제휴라인</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">wallet</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">wallet demo</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">symbol</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">ai-bot</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">레벨</th>
@@ -323,7 +324,13 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
                             }) : '-'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{user.referral_code}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">-</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                            {user.first_linked_at ? new Date(user.first_linked_at).toLocaleString('ko-KR', {
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit'
+                            }) : '-'}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{user.name || '-'}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">Lvl.{user.referrer_depth || '-'}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
@@ -348,7 +355,12 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
                               </button>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{user.trading_wallet || '-'}</td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                            {user.okx_balance ? Number(user.okx_balance).toFixed(2) : '-'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                            {user.okx_balance_demo ? Number(user.okx_balance_demo).toFixed(2) : '-'}
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{user.symbol_count || '-'}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">{user.bot_count || '-'}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -362,11 +374,11 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              user.is_active
-                                ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                                : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                              user.first_linked_at==null
+                                ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                                : 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
                             }`}>
-                              {user.is_active ? '활성' : '비활성'}
+                              {user.first_linked_at==null ? '활동전' : '활동중'}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
