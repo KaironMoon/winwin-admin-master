@@ -22,7 +22,7 @@ import {
 import UserServices from '../services/userServices';
 import AdminTabNav from '../components/AdminTabNav';
 
-function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
+function UserListPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
   const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -216,7 +216,7 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
       {/* 메인 컨텐츠 */}
       <main className="px-3 py-4">
         {/* 탭 네비게이션 */}
-        <div className="flex space-x-1 mb-6 mt-6">
+        <div className="flex space-x-1 mb-6">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -301,12 +301,14 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">가입일자</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">초대자코드</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">활동시작일</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">이름</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">수수료계층</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">활동수수료</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">제휴라인</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">wallet</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">wallet demo</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">symbol</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">ai-bot</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">레벨</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">상태</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">마지막 로그인</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">작업</th>
@@ -332,8 +334,8 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
                               day: '2-digit'
                             }) : '-'}
                           </td>
+                          <td className="px-6 py-2 whitespace-nowrap text-sm font-medium text-foreground">{user.name || '-'}</td>
                           <td className="px-6 py-2 whitespace-nowrap text-sm text-foreground">Lvl.{user.referrer_depth || '-'}</td>
-                          <td className="px-6 py-2 whitespace-nowrap text-sm text-foreground">{'-'}</td>
                           <td className="px-6 py-2 whitespace-nowrap text-sm text-foreground">
                             <div className="flex items-center space-x-2">
                               <span>{user.referral_count || '0'}</span>
@@ -359,15 +361,27 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
                           <td className="px-6 py-2 whitespace-nowrap text-sm text-foreground">
                             {user.okx_balance ? Number(user.okx_balance).toFixed(2) : '-'}
                           </td>
+                          <td className="px-6 py-2 whitespace-nowrap text-sm text-foreground">
+                            {user.okx_balance_demo ? Number(user.okx_balance_demo).toFixed(2) : '-'}
+                          </td>
                           <td className="px-6 py-2 whitespace-nowrap text-sm text-foreground">{user.symbol_count || '-'}</td>
                           <td className="px-6 py-2 whitespace-nowrap text-sm text-foreground">{user.bot_count || '-'}</td>
                           <td className="px-6 py-2 whitespace-nowrap text-sm">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              user.first_linked_at==null
-                                ? 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
-                                : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                              user.level === 'admin'
+                                ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                                : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
                             }`}>
-                              {user.first_linked_at==null ? 'OFF' : 'ON'}
+                              {user.level}
+                            </span>
+                          </td>
+                          <td className="px-6 py-2 whitespace-nowrap text-sm">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              user.first_linked_at==null
+                                ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                                : 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                            }`}>
+                              {user.first_linked_at==null ? '활동전' : '활동중'}
                             </span>
                           </td>
                           <td className="px-6 py-2 whitespace-nowrap text-sm text-muted-foreground">
@@ -527,8 +541,8 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
                   <tbody className="divide-y divide-border">
                     {mockLogs.map((log) => (
                       <tr key={log.id} className="hover:bg-muted/50">
-                        <td className="px-6 py-2 whitespace-nowrap text-sm text-muted-foreground">{log.timestamp}</td>
-                        <td className="px-6 py-2 whitespace-nowrap text-sm">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{log.timestamp}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             log.level === 'ERROR' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
                             log.level === 'WARNING' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
@@ -538,7 +552,7 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-foreground">{log.message}</td>
-                        <td className="px-6 py-2 whitespace-nowrap text-sm text-muted-foreground">{log.user}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{log.user}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -586,7 +600,6 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
             </div>
           )}
         </motion.div>
-
       </main>
 
       {/* 사용자 수정 모달 */}
@@ -732,4 +745,4 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
   );
 }
 
-export default AdminPage;
+export default UserListPage;

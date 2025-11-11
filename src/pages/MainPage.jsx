@@ -1,521 +1,262 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { useAtomValue } from 'jotai';
 
-import {
-  Sun,
-  Moon,
-  LogIn,
-  LogOut,
-  User
-} from 'lucide-react';
-import BotManagementPage from './BotManagementPage';
-import LandingPage from './LandingPage';
-import BrokerRevenuePage from './BrokerRevenuePage';
-import BrokerNetworkPage from './BrokerNetworkPage';
-import BrokerNetworkTreeView from './BrokerNetworkTreeView';
-import AdminPage from './AdminPage';
-import ReferralTreePage from './ReferralTreePage';
+// Stores
+import { isDemoAtom } from '../stores/isDemoStore';
+
+// Services
+import UserServices from '../services/userServices';
+import { getToken, isTokenExpired, isTokenExpiringSoon, refreshToken, logout } from '../lib/authUtils';
+
+// Layout & Router
+import MainLayout from '../layouts/MainLayout';
+import AppRouter from '../router/AppRouter';
+
+// Modals
 import AuthModal from '../components/AuthModal';
 import OKXOAuthModal from '../components/OKXOAuthModal';
 import OKXConnectModal from '../components/OKXConnectModal';
-import OKXTestPanel from '../components/OKXTestPanel';
 import MetaProphetModal from '../components/MetaProphetModal';
-import UserServices from '../services/userServices';
-import { useAtomValue } from 'jotai';
-import { isDemoAtom } from '../stores/isDemoStore';
 
-
-import { getToken, isTokenExpired, isTokenExpiringSoon, refreshToken, logout } from '../lib/authUtils';
-
+/**
+ * 메인 페이지 컴포넌트
+ *
+ * 애플리케이션의 최상위 컨테이너로서, 다음을 담당합니다:
+ * - 사용자 인증 상태 관리
+ * - JWT 토큰 자동 갱신
+ * - 전역 모달 관리
+ * - 테마 설정
+ */
 function MainPage() {
-    const location = useLocation();
-    const [isDarkMode, setIsDarkMode] = useState(false);
-    const [showAuthModal, setShowAuthModal] = useState(false);
-    const [showOKXModal, setShowOKXModal] = useState(false);
-    const [showOKXConnectModal, setShowOKXConnectModal] = useState(false);
-    const [showMetaProphetModal, setShowMetaProphetModal] = useState(false);
-    const [user, setUser] = useState(null);
-    const isDemo = useAtomValue(isDemoAtom);
-  
-    // 현재 라우트에 따른 헤더 top 값 결정
-    const getHeaderTopClass = () => {
-      return 'top-0'; // 모든 경우 top-0으로 고정
-    };
-  
-    // 토큰 갱신 로직
-    useEffect(() => {
-      let interval = null;
-  
-      const startTokenRefresh = () => {
-        // 기존 인터벌이 있으면 제거
-        if (interval) {
-          clearInterval(interval);
-        }
-  
-        // 20분마다 토큰 갱신 시도 (30분 만료 전에 갱신)
-        interval = setInterval(async () => {
-          const token = getToken();
-          if (token) {
-            // 토큰이 곧 만료될 예정이거나 이미 만료된 경우 갱신 시도
-            if (isTokenExpiringSoon() || isTokenExpired()) {
-              try {
-                await refreshToken();
-                // 토큰 갱신 후 권한 재검증
-                const userInfo = await UserServices.getUserMe(isDemo);
-                if (userInfo) {
-                  setUser(userInfo);
-                }
-              } catch (error) {
-                console.error('자동 토큰 갱신 실패:', error);
-                // 갱신 실패 시 로그아웃 처리
-                handleLogout();
-              }
-            }
-          }
-        }, 20 * 60 * 1000); // 20분
-  
-        
-      };
-  
-      // 사용자가 로그인되어 있으면 토큰 갱신 시작
-      if (user) {
-        startTokenRefresh();
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showOKXModal, setShowOKXModal] = useState(false);
+  const [showOKXConnectModal, setShowOKXConnectModal] = useState(false);
+  const [showMetaProphetModal, setShowMetaProphetModal] = useState(false);
+  const [user, setUser] = useState(null);
+  const isDemo = useAtomValue(isDemoAtom);
+
+  /**
+   * JWT 토큰 자동 갱신
+   * 20분마다 토큰 만료 여부를 확인하고 갱신 시도
+   */
+  useEffect(() => {
+    let interval = null;
+
+    const startTokenRefresh = () => {
+      // 기존 인터벌이 있으면 제거
+      if (interval) {
+        clearInterval(interval);
       }
-  
-      // 컴포넌트 언마운트 시 인터벌 정리
-      return () => {
-        if (interval) {
-          clearInterval(interval);
-  
-        }
-      };
-    }, [user]);
-  
-    // 로그인 상태 확인
-    useEffect(() => {
-      const fetchUserInfo = async () => {
-        try {
-          const token = getToken();
-          if (token) {
-            // 토큰이 곧 만료될 예정이면 갱신 시도
-            if (isTokenExpiringSoon()) {
-              try {
-                await refreshToken();
-              } catch (error) {
-                console.error('초기 토큰 갱신 실패:', error);
-                logout();
-                return;
-              }
-            }
 
-            const userInfo = await UserServices.getUserMe(isDemo);
-
-            if (userInfo !== null) {
-              // 임시로 브로커 역할 추가 (실제 환경에서는 서버에서 전달받음)
-              setUser(userInfo);
-
-            } else {
-              // 토큰이 유효하지 않으면 제거
-              logout();
-            }
-          }
-        } catch (error) {
-          console.error('사용자 정보 가져오기 실패:', error);
-          logout();
-        }
-      };
-
-      fetchUserInfo();
-    }, []);
-
-  
-  
-
-  
-    const toggleTheme = () => {
-      setIsDarkMode(!isDarkMode);
-      if (isDarkMode) {
-        document.documentElement.classList.remove('dark');
-      } else {
-        document.documentElement.classList.add('dark');
-      }
-    };
-  
-    // 초기 테마 설정
-    React.useEffect(() => {
-      if (isDarkMode) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    }, [isDarkMode]);
-  
-    const handleLogin = async (userData) => {
-      try {
-        // 로그인 후 사용자 정보를 API에서 다시 가져오기
+      // 20분마다 토큰 갱신 시도 (30분 만료 전에 갱신)
+      interval = setInterval(async () => {
         const token = getToken();
         if (token) {
+          // 토큰이 곧 만료될 예정이거나 이미 만료된 경우 갱신 시도
+          if (isTokenExpiringSoon() || isTokenExpired()) {
+            try {
+              await refreshToken();
+              // 토큰 갱신 후 권한 재검증
+              const userInfo = await UserServices.getUserMe(isDemo);
+              if (userInfo) {
+                setUser(userInfo);
+              }
+            } catch (error) {
+              console.error('자동 토큰 갱신 실패:', error);
+              // 갱신 실패 시 로그아웃 처리
+              handleLogout();
+            }
+          }
+        }
+      }, 20 * 60 * 1000); // 20분
+    };
+
+    // 사용자가 로그인되어 있으면 토큰 갱신 시작
+    if (user) {
+      startTokenRefresh();
+    }
+
+    // 컴포넌트 언마운트 시 인터벌 정리
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [user, isDemo]);
+
+  /**
+   * 로그인 상태 확인 및 복원
+   * 페이지 로드 시 localStorage의 토큰을 확인하여 사용자 정보를 가져옴
+   */
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const token = getToken();
+        if (token) {
+          // 토큰이 곧 만료될 예정이면 갱신 시도
+          if (isTokenExpiringSoon()) {
+            try {
+              await refreshToken();
+            } catch (error) {
+              console.error('초기 토큰 갱신 실패:', error);
+              logout();
+              return;
+            }
+          }
+
           const userInfo = await UserServices.getUserMe(isDemo);
 
           if (userInfo !== null) {
-            // 임시로 브로커 역할 추가 (실제 환경에서는 서버에서 전달받음)
             setUser(userInfo);
-            // 로그인 후 /admin 페이지로 리디렉션
-            window.location.href = '/admin';
           } else {
-            setUser(userData); // 기본 사용자 정보라도 설정
+            // 토큰이 유효하지 않으면 제거
+            logout();
           }
+        }
+      } catch (error) {
+        console.error('사용자 정보 가져오기 실패:', error);
+        logout();
+      }
+    };
+
+    fetchUserInfo();
+  }, [isDemo]);
+
+  /**
+   * 테마 전환 핸들러
+   */
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+    if (isDarkMode) {
+      document.documentElement.classList.remove('dark');
+    } else {
+      document.documentElement.classList.add('dark');
+    }
+  };
+
+  /**
+   * 초기 테마 설정
+   */
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  /**
+   * 로그인 성공 핸들러
+   */
+  const handleLogin = async (userData) => {
+    try {
+      // 로그인 후 사용자 정보를 API에서 다시 가져오기
+      const token = getToken();
+      if (token) {
+        const userInfo = await UserServices.getUserMe(isDemo);
+
+        if (userInfo !== null) {
+          setUser(userInfo);
+          // 로그인 후 /admin 페이지로 리디렉션
+          window.location.href = '/admin';
         } else {
           setUser(userData); // 기본 사용자 정보라도 설정
         }
-      } catch (error) {
-        if (error.message === 'UNAUTHORIZED_ACCESS') {
-          alert('관리자 권한이 필요합니다.\n관리자 계정으로 다시 로그인해주세요.');
-          logout();
-          setUser(null);
-        }
-        console.error('로그인 실패:', error);
-        // 로그아웃 처리
+      } else {
+        setUser(userData); // 기본 사용자 정보라도 설정
+      }
+    } catch (error) {
+      if (error.message === 'UNAUTHORIZED_ACCESS') {
+        alert('관리자 권한이 필요합니다.\n관리자 계정으로 다시 로그인해주세요.');
         logout();
         setUser(null);
       }
-    };
-  
-    const handleLogout = () => {
+      console.error('로그인 실패:', error);
+      // 로그아웃 처리
       logout();
       setUser(null);
-      window.location.href = '/';
-    };
-  
-    const handleOKXSuccess = async (okxAccount) => {
-      try {
-        // OKX 연동 후 사용자 정보를 API에서 다시 가져오기
-        const token = getToken();
-        if (token) {
-          const userInfo = await UserServices.getUserMe(isDemo);
-  
-          if (userInfo !== null) {
-            // 임시로 브로커 역할 추가 (실제 환경에서는 서버에서 전달받음)
-            setUser(userInfo);
-            
-          }
+    }
+  };
+
+  /**
+   * 로그아웃 핸들러
+   */
+  const handleLogout = () => {
+    logout();
+    setUser(null);
+    window.location.href = '/';
+  };
+
+  /**
+   * OKX 연동 성공 핸들러
+   */
+  const handleOKXSuccess = async (okxAccount) => {
+    try {
+      // OKX 연동 후 사용자 정보를 API에서 다시 가져오기
+      const token = getToken();
+      if (token) {
+        const userInfo = await UserServices.getUserMe(isDemo);
+
+        if (userInfo !== null) {
+          setUser(userInfo);
         }
-      } catch (error) {
-        // 에러 처리
       }
-    };
-  
-  
-    return (
-      <div className="min-h-screen bg-background">
-          {/* 헤더 - fixed로 변경 (제휴라인 페이지 제외) */}
-          {location.pathname !== '/referral-tree' && (
-          <header className={`fixed left-0 right-0 z-[60] bg-black ${getHeaderTopClass()}`}>
-            <div className="px-2 sm:px-3 py-1.5 sm:py-2">
-              {/* 메인 헤더 라인 */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-1 sm:space-x-3">
-                  <button
-                    onClick={() => window.location.href = user ? '/admin' : '/'}
-                    className="hover:opacity-80 transition-opacity cursor-pointer"
-                  >
-                                        <div>
-                        <h1 className="text-base sm:text-xl md:text-2xl font-bold text-white">
-                          <span className="font-sacheon">MegaBit</span> <span className="hidden md:inline-block text-xs sm:text-sm text-gray-400">AI Trader</span>
-                        </h1>
-                      </div>
-                  </button>
-                </div>
-                
-                <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-4">
-                  {/* META Prophet 버튼 - 모든 사용자에게 표시 */}
-                  <button
-                    onClick={() => setShowMetaProphetModal(true)}
-                    className="hidden sm:flex items-center space-x-1 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg text-white text-sm font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-200 cursor-pointer"
-                  >
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                    </svg>
-                    <span>powered by META Prophet</span>
-                  </button>
-                  
+    } catch (error) {
+      console.error('OKX 연동 후 사용자 정보 갱신 실패:', error);
+    }
+  };
 
-                  {/* 사용자 정보 또는 로그인 버튼 */}
-                  {user ? (
-                    <>
-                      {/* 데스크톱에서만 표시 - 한 줄에 모든 요소 */}
-                      <div className="hidden sm:flex items-center space-x-3">
-                        <div className="flex items-center space-x-2">
-                          <User size={16} className="text-gray-400" />
-                          <span className="text-white text-sm font-medium">{user.email}</span>
-                          <span className="text-xs bg-gray-800 text-gray-300 border border-gray-700 rounded px-2 py-1">관리자</span>
-                        </div>
-
-                        <button
-                          onClick={handleLogout}
-                          className="text-gray-400 hover:text-white p-2 rounded-md hover:bg-gray-800 transition-colors"
-                          title="로그아웃"
-                        >
-                          <LogOut size={16} />
-                        </button>
-                      </div>
-                      
-                      {/* 모바일에서만 표시 - 간소화된 버튼 */}
-                      <div className="flex sm:hidden items-center space-x-1">
-                        <button
-                          onClick={handleLogout}
-                          className="text-gray-400 hover:text-white p-1.5 rounded-md hover:bg-gray-800 transition-colors"
-                          title="로그아웃"
-                        >
-                          <LogOut className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </>
-                  ) : (
-                    <button
-                      onClick={() => setShowAuthModal(true)}
-                      className="btn-primary flex items-center px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs sm:text-sm rounded-md sm:rounded-lg"
-                    >
-                      <LogIn className="w-4 h-4" />
-                      <span className="ml-1">로그인</span>
-                    </button>
-                  )}
-                  
-                  <button
-                    onClick={toggleTheme}
-                    className="text-gray-400 hover:text-white p-2 rounded-md hover:bg-gray-800 transition-colors hidden md:block"
-                  >
-                    {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-                  </button>
-                </div>
-              </div>
-              
-            </div>
-          </header>
-          )}
-
-          {/* 네비게이션 - 로그인한 사용자에게만 표시 (루트 라우트 및 제휴라인 페이지 제외) */}
-          {user && location.pathname !== '/' && location.pathname !== '/referral-tree' && (
-            <>
-              {/* 데스크톱 네비게이션 */}
-              <nav className="fixed top-[51px] left-0 right-0 z-40 hidden md:block bg-black border-b border-gray-800">
-                <div className="px-3 py-2">
-                  <div className="flex space-x-6">
-                    {/* 브로커 메뉴 */}
-                    <div className="flex items-center space-x-1 bg-gradient-to-r from-purple-500/20 to-indigo-500/20 border border-purple-400/40 rounded-lg px-3 py-1.5">
-                      <svg className="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
-                      </svg>
-                      <span className="text-sm text-purple-300 font-semibold">브로커 전용</span>
-                      <div className="w-1 h-1 bg-purple-400 rounded-full animate-pulse"></div>
-                    </div>
-                    <NavigationLink to="/broker/revenue" user={user} onShowLoginModal={() => setShowAuthModal(true)}>나의 수익</NavigationLink>
-                    <NavigationLink to="/broker/network" user={user} onShowLoginModal={() => setShowAuthModal(true)}>하위 브로커 정산</NavigationLink>
-
-                    <div className="h-6 w-px bg-gray-800 mx-2"></div>
-
-                    {/* 관리자 메뉴 */}
-                    <div className="flex items-center space-x-1 bg-gradient-to-r from-red-500/20 to-orange-500/20 border border-red-400/40 rounded-lg px-3 py-1.5">
-                      <svg className="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span className="text-sm text-red-300 font-semibold">관리자 전용</span>
-                      <div className="w-1 h-1 bg-red-400 rounded-full animate-pulse"></div>
-                    </div>
-                    <NavigationLink to="/admin" user={user} onShowLoginModal={() => setShowAuthModal(true)}>시스템 관리</NavigationLink>
-                  </div>
-                </div>
-              </nav>
-
-              {/* 모바일 네비게이션 */}
-              <nav className="fixed top-[90px] sm:top-[88px] left-0 right-0 z-40 md:hidden bg-black border-b border-gray-800">
-                <div className="px-2 py-1.5">
-                  <div className="flex items-center justify-start space-x-2 overflow-x-auto scrollbar-hide">
-                    {/* 브로커 메뉴 */}
-                    <MobileNavLink to="/broker/revenue" user={user} onShowLoginModal={() => setShowAuthModal(true)} colorTheme="broker">
-                      나의 수익
-                    </MobileNavLink>
-                    <MobileNavLink to="/broker/network" user={user} onShowLoginModal={() => setShowAuthModal(true)} colorTheme="broker">
-                      하위브로커 정산
-                    </MobileNavLink>
-
-                    <div className="h-4 w-px bg-gray-800 mx-1"></div>
-
-                    {/* 관리자 메뉴 */}
-                    <MobileNavLink to="/admin" user={user} onShowLoginModal={() => setShowAuthModal(true)} colorTheme="admin">
-                      시스템 관리
-                    </MobileNavLink>
-                  </div>
-                </div>
-              </nav>
-            </>
-          )}
-  
-          {/* 메인 콘텐츠 - 라우트와 로그인 상태에 따라 패딩 조정 */}
-          <main className={
-            location.pathname === '/' || location.pathname === '/referral-tree'
-              ? "pt-0"
-              : (user
-                  ? "pt-[125px] sm:pt-[125px] md:pt-[109px]"
-                  : "pt-16")
-          }>
-            {/* 라우트 */}
-            <Routes>
-              <Route 
-                path="/" 
-                element={<LandingPage onShowLoginModal={() => setShowAuthModal(true)} />}
-              />
-              <Route
-                path="/bots"
-                element={
-                  <BotManagementPage
-                    isDarkMode={isDarkMode}
-                    user={user}
-                    onShowOKXModal={() => setShowOKXModal(true)}
-                    onLogout={handleLogout}
-                    onShowLoginModal={() => setShowAuthModal(true)}
-                  />
-                }
-              />
-              <Route
-                path="/test"
-                element={
-                  <div className="container mx-auto py-6">
-                    <OKXTestPanel />
-                  </div>
-                }
-              />
-              <Route
-                path="/broker/revenue"
-                element={<BrokerRevenuePage />}
-              />
-              <Route
-                path="/broker/network"
-                element={<BrokerNetworkTreeView />}
-              />
-              <Route
-                path="/broker/network-v1"
-                element={<BrokerNetworkPage />}
-              />
-              <Route
-                path="/admin"
-                element={<AdminPage />}
-              />
-              <Route
-                path="/referral-tree"
-                element={<ReferralTreePage />}
-              />
-            </Routes>
-          </main>
-  
-          {/* 인증 모달 */}
-          <AuthModal
-            isOpen={showAuthModal}
-            onClose={() => setShowAuthModal(false)}
-            onLogin={handleLogin}
-          />
-  
-          {/* OKX OAuth 연동 모달 */}
-          <OKXOAuthModal
-            isOpen={showOKXModal}
-            onClose={() => setShowOKXModal(false)}
-            onSuccess={handleOKXSuccess}
-          />
-  
-          {/* OKX Connect 모달 */}
-          <OKXConnectModal
-            isOpen={showOKXConnectModal}
-            onClose={() => setShowOKXConnectModal(false)}
-            onSuccess={handleOKXSuccess}
-          />
-  
-          {/* MetaProphet 모달 */}
-          <MetaProphetModal
-            isOpen={showMetaProphetModal}
-            onClose={() => setShowMetaProphetModal(false)}
-          />
-        </div>
-    );
-  }
-  
-  // 네비게이션 링크 컴포넌트
-  function NavigationLink({ to, children, onClick, user, onShowLoginModal }) {
-    const navigate = useNavigate();
-    
-    const handleClick = () => {
-      // '활성화된 봇' 페이지는 로그인 필요
-      if (to === '/bots' && !user) {
-        if (onShowLoginModal) {
-          onShowLoginModal();
-        } else {
-          alert('로그인이 필요합니다.');
-        }
-        return;
-      }
-      
-      navigate(to);
-      if (onClick) onClick();
-    };
-  
-    return (
-      <button
-        onClick={handleClick}
-        className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+  return (
+    <>
+      {/* 메인 레이아웃 */}
+      <MainLayout
+        user={user}
+        isDarkMode={isDarkMode}
+        onToggleTheme={toggleTheme}
+        onShowAuthModal={() => setShowAuthModal(true)}
+        onShowMetaProphetModal={() => setShowMetaProphetModal(true)}
+        onLogout={handleLogout}
       >
-        {children}
-      </button>
-    );
-  }
+        {/* 라우터 */}
+        <AppRouter
+          user={user}
+          isDarkMode={isDarkMode}
+          onShowOKXModal={() => setShowOKXModal(true)}
+          onLogout={handleLogout}
+          onShowLoginModal={() => setShowAuthModal(true)}
+        />
+      </MainLayout>
 
-  // 모바일 네비게이션 링크 컴포넌트
-  function MobileNavLink({ to, children, onClick, user, onShowLoginModal, colorTheme }) {
-    const navigate = useNavigate();
-    const location = useLocation();
-    const isActive = location.pathname === to;
-    
-    const handleClick = () => {
-      // '활성화된 봇' 페이지는 로그인 필요
-      if (to === '/bots' && !user) {
-        if (onShowLoginModal) {
-          onShowLoginModal();
-        } else {
-          alert('로그인이 필요합니다.');
-        }
-        return;
-      }
-      
-      navigate(to);
-      if (onClick) onClick();
-    };
-    
-    // 색상 테마별 스타일 정의
-    const getThemeStyles = () => {
-      if (colorTheme === 'broker') {
-        return isActive
-          ? 'bg-purple-600 text-white'
-          : 'text-purple-300 hover:bg-purple-950/30 hover:text-purple-200';
-      } else if (colorTheme === 'admin') {
-        return isActive
-          ? 'bg-red-600 text-white'
-          : 'text-red-300 hover:bg-red-950/30 hover:text-red-200';
-      } else {
-        return isActive
-          ? 'bg-primary text-primary-foreground'
-          : 'text-gray-300 hover:text-white hover:bg-gray-800';
-      }
-    };
-  
-    return (
-      <button
-        onClick={handleClick}
-        className={`
-          px-2.5 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap
-          ${getThemeStyles()}
-        `}
-      >
-        {children}
-      </button>
-    );
-  }
+      {/* 인증 모달 */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onLogin={handleLogin}
+      />
 
-  export default MainPage;
+      {/* OKX OAuth 연동 모달 */}
+      <OKXOAuthModal
+        isOpen={showOKXModal}
+        onClose={() => setShowOKXModal(false)}
+        onSuccess={handleOKXSuccess}
+      />
+
+      {/* OKX Connect 모달 */}
+      <OKXConnectModal
+        isOpen={showOKXConnectModal}
+        onClose={() => setShowOKXConnectModal(false)}
+        onSuccess={handleOKXSuccess}
+      />
+
+      {/* MetaProphet 모달 */}
+      <MetaProphetModal
+        isOpen={showMetaProphetModal}
+        onClose={() => setShowMetaProphetModal(false)}
+      />
+    </>
+  );
+}
+
+export default MainPage;
+
