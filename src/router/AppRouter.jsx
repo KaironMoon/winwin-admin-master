@@ -11,6 +11,7 @@ import AdminPage from '../pages/AdminPage';
 import UserListPage from '../pages/UserListPage';
 import TransactionListPage from '../pages/TransactionListPage';
 import ReferralTreePage from '../pages/ReferralTreePage';
+import ReferralTransactionListPage from '../pages/ReferralTransactionListPage';
 import OKXTestPanel from '../components/OKXTestPanel';
 
 /**
@@ -110,6 +111,18 @@ function AppRouter({
       <Route
         path="/referral-tree"
         element={<ReferralTreePage />}
+      />
+
+      {/* 하위 추천인 거래 목록 페이지 */}
+      <Route
+        path="/referral-transactions"
+        element={
+          <ReferralTransactionListPage
+            isDarkMode={isDarkMode}
+            user={user}
+            onLogout={onLogout}
+          />
+        }
       />
     </Routes>
   );

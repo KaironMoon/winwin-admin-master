@@ -341,14 +341,9 @@ function UserListPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }
                               <span>{user.referral_count || '0'}</span>
                               <button
                                 onClick={() => {
-                                  const width = 1200;
-                                  const height = 800;
-                                  const left = (window.screen.width - width) / 2;
-                                  const top = (window.screen.height - height) / 2;
                                   window.open(
-                                    `/referral-tree?user_id=${user.id}`,
-                                    `referral_tree_${user.id}`,
-                                    `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+                                    `/referral-transactions?user_id=${user.id}`,
+                                    '_blank'
                                   );
                                 }}
                                 className="text-primary hover:text-primary/80 transition-colors"

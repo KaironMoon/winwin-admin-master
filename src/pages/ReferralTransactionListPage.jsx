@@ -11,18 +11,17 @@ import {
   ChevronRight,
   TrendingUp,
   TrendingDown,
-  DollarSign,
-  FileText
+  DollarSign
 } from 'lucide-react';
-import AdminTabNav from '../components/AdminTabNav';
 import TransactionServices from '../services/transactionServices';
 
 /**
- * 거래정보 페이지
+ * 하위 추천인 거래정보 페이지
  *
- * 사용자들의 거래 요약 정보를 조회하고 관리합니다.
+ * 특정 사용자의 하위 추천인들의 거래 요약 정보를 조회하고 관리합니다.
  */
-function TransactionListPage({ isDarkMode, user, onLogout }) {
+function ReferralTransactionListPage({ isDarkMode, user, onLogout }) {
+  const [userId, setUserId] = useState(null);
   const [usersSummary, setUsersSummary] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -36,12 +35,26 @@ function TransactionListPage({ isDarkMode, user, onLogout }) {
   // 검색 상태
   const [searchText, setSearchText] = useState('');
 
-  // 사용자 거래 요약 목록 조회
-  const loadUsersSummary = async () => {
+  // URL에서 user_id 파라미터 추출
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('user_id');
+    if (id) {
+      setUserId(parseInt(id));
+    } else {
+      setError('사용자 ID가 제공되지 않았습니다.');
+    }
+  }, []);
+
+  // 하위 추천인 거래 요약 목록 조회
+  const loadReferralsSummary = async () => {
+    if (!userId) return;
+
     setLoading(true);
     setError(null);
     try {
-      const response = await TransactionServices.getUsersTradingSummary(
+      const response = await TransactionServices.getReferralsTradingSummary(
+        userId,
         searchText,
         currentPage,
         pageSize
@@ -51,7 +64,7 @@ function TransactionListPage({ isDarkMode, user, onLogout }) {
       setTotalCount(response.total || 0);
       setTotalPages(response.total_pages || 0);
     } catch (err) {
-      console.error('사용자 거래 요약 조회 실패:', err);
+      console.error('하위 추천인 거래 요약 조회 실패:', err);
       setError(err.response?.data?.detail || err.message || '데이터 조회에 실패했습니다.');
     } finally {
       setLoading(false);
@@ -62,7 +75,7 @@ function TransactionListPage({ isDarkMode, user, onLogout }) {
   const handleSearch = (e) => {
     e.preventDefault();
     setCurrentPage(1);
-    loadUsersSummary();
+    loadReferralsSummary();
   };
 
   // 페이지 변경
@@ -72,10 +85,12 @@ function TransactionListPage({ isDarkMode, user, onLogout }) {
     }
   };
 
-  // 컴포넌트 마운트 시 및 페이지 변경 시 데이터 조회
+  // userId가 설정되면 데이터 조회
   useEffect(() => {
-    loadUsersSummary();
-  }, [currentPage, pageSize]);
+    if (userId) {
+      loadReferralsSummary();
+    }
+  }, [userId, currentPage, pageSize]);
 
   // ROE 색상 결정
   const getRoeColor = (roe) => {
@@ -101,18 +116,18 @@ function TransactionListPage({ isDarkMode, user, onLogout }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <button
-                onClick={() => window.location.href = '/admin'}
+                onClick={() => window.close()}
                 className="btn-ghost p-2 rounded-md hover:bg-accent"
-                title="관리자 페이지로 돌아가기"
+                title="닫기"
               >
                 <ArrowLeft size={20} />
               </button>
-              <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
                 <Shield className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">거래 관리</h1>
-                <p className="text-muted-foreground text-sm">사용자별 거래 정보 및 봇 활동 현황</p>
+                <h1 className="text-2xl font-bold text-foreground">하위 추천인 거래 정보</h1>
+                <p className="text-muted-foreground text-sm">제휴라인별 거래 정보 및 봇 활동 현황</p>
               </div>
             </div>
 
@@ -145,7 +160,7 @@ function TransactionListPage({ isDarkMode, user, onLogout }) {
 
       {/* 메인 컨텐츠 */}
       <main className="px-3 py-4">
-        {/* 사용자 거래 요약 목록 */}
+        {/* 하위 추천인 거래 요약 목록 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -156,7 +171,7 @@ function TransactionListPage({ isDarkMode, user, onLogout }) {
             <div className="p-6 border-b">
               <div className="flex justify-between items-center mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground">사용자 거래 요약</h3>
+                  <h3 className="text-lg font-semibold text-foreground">하위 추천인 거래 요약</h3>
                   <p className="text-muted-foreground text-sm">사용자별 활성 봇 및 수익률 정보</p>
                 </div>
 
@@ -177,12 +192,9 @@ function TransactionListPage({ isDarkMode, user, onLogout }) {
                   </button>
                 </form>
               </div>
-
-              {/* 관리자 페이지 탭 네비게이션 */}
-              <AdminTabNav />
             </div>
 
-            {/* 사용자 거래 요약 테이블 */}
+            {/* 하위 추천인 거래 요약 테이블 */}
             <div className="overflow-x-auto">
               {loading ? (
                 <div className="p-12 text-center text-muted-foreground">
@@ -217,9 +229,6 @@ function TransactionListPage({ isDarkMode, user, onLogout }) {
                       </th>
                       <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         ROE
-                      </th>
-                      <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        제휴라인
                       </th>
                     </tr>
                   </thead>
@@ -296,25 +305,6 @@ function TransactionListPage({ isDarkMode, user, onLogout }) {
                           <div className={`text-lg font-bold ${getRoeColor(summary.total_roe)}`}>
                             {parseFloat(summary.total_roe) >= 0 ? '+' : ''}
                             {parseFloat(summary.total_roe).toFixed(2)}%
-                          </div>
-                        </td>
-
-                        {/* 제휴라인 */}
-                        <td className="px-4 py-3 whitespace-nowrap text-center text-sm text-foreground">
-                          <div className="flex items-center justify-center space-x-2">
-                            <span>{summary.referral_count || '0'}</span>
-                            <button
-                              onClick={() => {
-                                window.open(
-                                  `/referral-transactions?user_id=${summary.user_id}`,
-                                  '_blank'
-                                );
-                              }}
-                              className="text-primary hover:text-primary/80 transition-colors"
-                              title="제휴라인 조회"
-                            >
-                              <FileText size={16} />
-                            </button>
                           </div>
                         </td>
                       </tr>
@@ -403,4 +393,4 @@ function TransactionListPage({ isDarkMode, user, onLogout }) {
   );
 }
 
-export default TransactionListPage;
+export default ReferralTransactionListPage;
