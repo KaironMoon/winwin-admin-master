@@ -14,6 +14,7 @@ import {
   DollarSign
 } from 'lucide-react';
 import TransactionServices from '../services/transactionServices';
+import UserServices from '../services/userServices';
 
 /**
  * 하위 추천인 거래정보 페이지
@@ -34,6 +35,10 @@ function ReferralTransactionListPage({ isDarkMode, user, onLogout }) {
 
   // 검색 상태
   const [searchText, setSearchText] = useState('');
+
+  // 메모 편집 상태
+  const [editingMemo, setEditingMemo] = useState({}); // { userId: memoText }
+  const [savingMemo, setSavingMemo] = useState({}); // { userId: boolean }
 
   // URL에서 user_id 파라미터 추출
   useEffect(() => {
@@ -106,6 +111,27 @@ function ReferralTransactionListPage({ isDarkMode, user, onLogout }) {
     if (pnlNum > 0) return 'text-green-600';
     if (pnlNum < 0) return 'text-red-600';
     return 'text-muted-foreground';
+  };
+
+  // 메모 저장
+  const handleSaveMemo = async (userId, memo) => {
+    setSavingMemo(prev => ({ ...prev, [userId]: true }));
+    try {
+      await UserServices.updateAdminMemo(userId, memo);
+      // 목록 새로고침
+      await loadReferralsSummary();
+      // 편집 상태 초기화
+      setEditingMemo(prev => {
+        const newState = { ...prev };
+        delete newState[userId];
+        return newState;
+      });
+    } catch (err) {
+      console.error('메모 저장 실패:', err);
+      alert('메모 저장에 실패했습니다.');
+    } finally {
+      setSavingMemo(prev => ({ ...prev, [userId]: false }));
+    }
   };
 
   return (
@@ -235,9 +261,59 @@ function ReferralTransactionListPage({ isDarkMode, user, onLogout }) {
                   <tbody className="divide-y divide-border">
                     {usersSummary.map((summary) => (
                       <tr key={summary.user_id} className="hover:bg-muted/50">
-                        {/* 사용자 UID */}
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-foreground font-mono">
-                          {summary.user_uid}
+                        {/* 사용자 UID + 메모 */}
+                        <td className="px-4 py-3 text-sm text-foreground font-mono">
+                          <div className="flex flex-col space-y-1">
+                            {/* UID */}
+                            <div className="whitespace-nowrap">{summary.user_uid}</div>
+
+                            {/* 메모 */}
+                            {editingMemo[summary.user_id] !== undefined ? (
+                              // 편집 모드
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="text"
+                                  value={editingMemo[summary.user_id]}
+                                  onChange={(e) => setEditingMemo(prev => ({
+                                    ...prev,
+                                    [summary.user_id]: e.target.value
+                                  }))}
+                                  placeholder="메모 입력"
+                                  className="px-2 py-1 text-xs border border-input rounded bg-background min-w-[150px]"
+                                  disabled={savingMemo[summary.user_id]}
+                                />
+                                <button
+                                  onClick={() => handleSaveMemo(summary.user_id, editingMemo[summary.user_id])}
+                                  disabled={savingMemo[summary.user_id]}
+                                  className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50"
+                                >
+                                  {savingMemo[summary.user_id] ? '저장중...' : '저장'}
+                                </button>
+                                <button
+                                  onClick={() => setEditingMemo(prev => {
+                                    const newState = { ...prev };
+                                    delete newState[summary.user_id];
+                                    return newState;
+                                  })}
+                                  disabled={savingMemo[summary.user_id]}
+                                  className="px-2 py-1 text-xs border border-input rounded hover:bg-accent disabled:opacity-50"
+                                >
+                                  취소
+                                </button>
+                              </div>
+                            ) : (
+                              // 표시 모드
+                              <div
+                                onClick={() => setEditingMemo(prev => ({
+                                  ...prev,
+                                  [summary.user_id]: summary.admin_memo || ''
+                                }))}
+                                className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                              >
+                                {summary.admin_memo || '메모추가 (선택사항)'}
+                              </div>
+                            )}
+                          </div>
                         </td>
 
                         {/* 닉네임 */}

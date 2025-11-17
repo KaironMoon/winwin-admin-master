@@ -43,6 +43,10 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
+  // 메모 편집 상태
+  const [editingMemo, setEditingMemo] = useState({}); // { userId: memoText }
+  const [savingMemo, setSavingMemo] = useState({}); // { userId: boolean }
+
   const tabs = [
     { id: 'users', name: '사용자 관리', icon: Users },
     { id: 'system', name: '시스템 상태', icon: Server },
@@ -139,6 +143,27 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
+    }
+  };
+
+  // 메모 저장
+  const handleSaveMemo = async (userId, memo) => {
+    setSavingMemo(prev => ({ ...prev, [userId]: true }));
+    try {
+      await UserServices.updateAdminMemo(userId, memo);
+      // 목록 새로고침
+      await loadUsers();
+      // 편집 상태 초기화
+      setEditingMemo(prev => {
+        const newState = { ...prev };
+        delete newState[userId];
+        return newState;
+      });
+    } catch (err) {
+      console.error('메모 저장 실패:', err);
+      alert('메모 저장에 실패했습니다.');
+    } finally {
+      setSavingMemo(prev => ({ ...prev, [userId]: false }));
     }
   };
 
@@ -316,7 +341,60 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
                       {users.map((user) => (
                         <tr key={user.id} className="hover:bg-muted/50">
                           <td className="px-6 py-2 whitespace-nowrap text-sm text-foreground">{user.id}</td>
-                          <td className="px-6 py-2 whitespace-nowrap text-sm text-foreground">{user.okx_uid}</td>
+                          {/* OKX UID + 메모 */}
+                          <td className="px-6 py-2 text-sm text-foreground">
+                            <div className="flex flex-col space-y-1">
+                              {/* OKX UID */}
+                              <div className="whitespace-nowrap">{user.okx_uid || '-'}</div>
+
+                              {/* 메모 */}
+                              {editingMemo[user.id] !== undefined ? (
+                                // 편집 모드
+                                <div className="flex items-center space-x-2">
+                                  <input
+                                    type="text"
+                                    value={editingMemo[user.id]}
+                                    onChange={(e) => setEditingMemo(prev => ({
+                                      ...prev,
+                                      [user.id]: e.target.value
+                                    }))}
+                                    placeholder="메모 입력"
+                                    className="px-2 py-1 text-xs border border-input rounded bg-background min-w-[150px]"
+                                    disabled={savingMemo[user.id]}
+                                  />
+                                  <button
+                                    onClick={() => handleSaveMemo(user.id, editingMemo[user.id])}
+                                    disabled={savingMemo[user.id]}
+                                    className="px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90 disabled:opacity-50"
+                                  >
+                                    {savingMemo[user.id] ? '저장중...' : '저장'}
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingMemo(prev => {
+                                      const newState = { ...prev };
+                                      delete newState[user.id];
+                                      return newState;
+                                    })}
+                                    disabled={savingMemo[user.id]}
+                                    className="px-2 py-1 text-xs border border-input rounded hover:bg-accent disabled:opacity-50"
+                                  >
+                                    취소
+                                  </button>
+                                </div>
+                              ) : (
+                                // 표시 모드
+                                <div
+                                  onClick={() => setEditingMemo(prev => ({
+                                    ...prev,
+                                    [user.id]: user.admin_memo || ''
+                                  }))}
+                                  className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors"
+                                >
+                                  {user.admin_memo || '메모추가 (선택사항)'}
+                                </div>
+                              )}
+                            </div>
+                          </td>
                           <td className="px-6 py-2 whitespace-nowrap text-sm text-foreground">
                            {user.created_at ? new Date(user.created_at).toLocaleString('ko-KR', {
                               year: 'numeric',
@@ -616,7 +694,16 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
               if (password) {
                 userData.password = password;
               }
-              handleEditUser(userData);
+
+              // 관리자 메모 처리 (별도 API 호출)
+              const adminMemo = formData.get('admin_memo');
+              if (adminMemo !== selectedUser.admin_memo) {
+                handleSaveMemo(selectedUser.id, adminMemo).then(() => {
+                  handleEditUser(userData);
+                });
+              } else {
+                handleEditUser(userData);
+              }
             }}>
               <div className="space-y-4">
                 <div>
@@ -671,6 +758,19 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
                     <option value="true">활성</option>
                     <option value="false">비활성</option>
                   </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    관리자 메모
+                    <span className="text-xs text-muted-foreground ml-2">(선택사항)</span>
+                  </label>
+                  <textarea
+                    name="admin_memo"
+                    defaultValue={selectedUser.admin_memo || ''}
+                    placeholder="사용자 식별을 위한 메모를 입력하세요"
+                    rows="3"
+                    className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground resize-none"
+                  />
                 </div>
               </div>
               <div className="flex justify-end space-x-2 mt-6">

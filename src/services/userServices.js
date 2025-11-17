@@ -167,6 +167,27 @@ const UserServices = {
             }
         });
         return response;
+    },
+
+    /**
+     * 관리자 메모 업데이트
+     * @param {number} userId - 사용자 ID
+     * @param {string} adminMemo - 관리자 메모 내용
+     * @returns {Promise} - 업데이트된 사용자 정보
+     */
+    updateAdminMemo: async (userId, adminMemo) => {
+        const token = UserServices.getUserToken();
+        const response = await axios.patch(
+            `${config.API_BASE_URL}/api/user/${userId}/admin-memo`,
+            { admin_memo: adminMemo },
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+        return response.data;
     }
 }
 
