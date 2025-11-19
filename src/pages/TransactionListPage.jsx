@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useAtomValue, useSetAtom } from 'jotai';
 import {
   Activity,
   User,
@@ -17,6 +18,17 @@ import {
 import AdminTabNav from '../components/AdminTabNav';
 import TransactionServices from '../services/transactionServices';
 import UserServices from '../services/userServices';
+import DateRangeFilter from '../components/DateRangeFilter';
+import {
+  dateRangeTypeAtom,
+  startDateAtom,
+  endDateAtom,
+  setDateRangeTypeAtom,
+  setStartDateAtom,
+  setEndDateAtom,
+  initDateRangeAtom,
+  STORAGE_KEY
+} from '../stores/dateRangeStore';
 
 /**
  * 거래정보 페이지
@@ -36,6 +48,15 @@ function TransactionListPage({ isDarkMode, user, onLogout }) {
 
   // 검색 상태
   const [searchText, setSearchText] = useState('');
+
+  // 기간 검색 상태 (전역 atom 사용)
+  const dateRangeType = useAtomValue(dateRangeTypeAtom);
+  const startDate = useAtomValue(startDateAtom);
+  const endDate = useAtomValue(endDateAtom);
+  const setDateRangeType = useSetAtom(setDateRangeTypeAtom);
+  const setStartDate = useSetAtom(setStartDateAtom);
+  const setEndDate = useSetAtom(setEndDateAtom);
+  const initDateRange = useSetAtom(initDateRangeAtom);
 
   // 메모 편집 상태
   const [editingMemo, setEditingMemo] = useState({}); // { userId: memoText }
@@ -63,6 +84,85 @@ function TransactionListPage({ isDarkMode, user, onLogout }) {
     }
   };
 
+  // 기간 검색 날짜 계산
+  const calculateDateRange = (rangeType) => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    switch (rangeType) {
+      case 'today':
+        setStartDate(todayStr);
+        setEndDate(todayStr);
+        break;
+
+      case 'last7days': {
+        const start = new Date(today);
+        start.setDate(start.getDate() - 7);
+        const end = new Date(today);
+        end.setDate(end.getDate() - 1);
+
+        setStartDate(`${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`);
+        setEndDate(`${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`);
+        break;
+      }
+
+      case 'last15days': {
+        const start = new Date(today);
+        start.setDate(start.getDate() - 15);
+        const end = new Date(today);
+        end.setDate(end.getDate() - 1);
+
+        setStartDate(`${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`);
+        setEndDate(`${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`);
+        break;
+      }
+
+      case 'last30days': {
+        const start = new Date(today);
+        start.setDate(start.getDate() - 30);
+        const end = new Date(today);
+        end.setDate(end.getDate() - 1);
+
+        setStartDate(`${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`);
+        setEndDate(`${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`);
+        break;
+      }
+
+      case 'thismonth': {
+        const firstDay = new Date(yyyy, today.getMonth(), 1);
+        const lastDay = new Date(yyyy, today.getMonth() + 1, 0);
+
+        setStartDate(`${firstDay.getFullYear()}-${String(firstDay.getMonth() + 1).padStart(2, '0')}-${String(firstDay.getDate()).padStart(2, '0')}`);
+        setEndDate(`${lastDay.getFullYear()}-${String(lastDay.getMonth() + 1).padStart(2, '0')}-${String(lastDay.getDate()).padStart(2, '0')}`);
+        break;
+      }
+
+      case 'all':
+        setStartDate('');
+        setEndDate('');
+        break;
+
+      case 'custom':
+        setStartDate(todayStr);
+        setEndDate(todayStr);
+        break;
+
+      default:
+        setStartDate('');
+        setEndDate('');
+    }
+  };
+
+  // 기간 검색 타입 변경 핸들러
+  const handleDateRangeTypeChange = (e) => {
+    const newType = e.target.value;
+    setDateRangeType(newType);
+    calculateDateRange(newType);
+  };
+
   // 검색 처리
   const handleSearch = (e) => {
     e.preventDefault();
@@ -81,6 +181,27 @@ function TransactionListPage({ isDarkMode, user, onLogout }) {
   useEffect(() => {
     loadUsersSummary();
   }, [currentPage, pageSize]);
+
+  // 기간 검색 필터 변경 시 검색 실행
+  useEffect(() => {
+    loadUsersSummary();
+  }, [dateRangeType, startDate, endDate]);
+
+  // 컴포넌트 마운트 시 localStorage에서 기간 필터 초기화 및 storage 이벤트 리스너 등록
+  useEffect(() => {
+    // localStorage에서 값 로드
+    initDateRange();
+
+    // 다른 탭에서 변경사항 감지
+    const handleStorageChange = (e) => {
+      if (e.key === STORAGE_KEY && e.newValue) {
+        initDateRange();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   // ROE 색상 결정
   const getRoeColor = (roe) => {
@@ -203,6 +324,16 @@ function TransactionListPage({ isDarkMode, user, onLogout }) {
                   </button>
                 </form>
               </div>
+
+              {/* 기간 검색 필터 */}
+              <DateRangeFilter
+                dateRangeType={dateRangeType}
+                startDate={startDate}
+                endDate={endDate}
+                onDateRangeTypeChange={handleDateRangeTypeChange}
+                onStartDateChange={setStartDate}
+                onEndDateChange={setEndDate}
+              />
 
               {/* 관리자 페이지 탭 네비게이션 */}
               <AdminTabNav />

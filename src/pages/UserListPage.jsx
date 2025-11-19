@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useAtomValue, useSetAtom } from 'jotai';
 import {
   Activity,
   User,
@@ -21,6 +22,17 @@ import {
 } from 'lucide-react';
 import UserServices from '../services/userServices';
 import AdminTabNav from '../components/AdminTabNav';
+import DateRangeFilter from '../components/DateRangeFilter';
+import {
+  dateRangeTypeAtom,
+  startDateAtom,
+  endDateAtom,
+  setDateRangeTypeAtom,
+  setStartDateAtom,
+  setEndDateAtom,
+  initDateRangeAtom,
+  STORAGE_KEY
+} from '../stores/dateRangeStore';
 
 function UserListPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
   const [activeTab, setActiveTab] = useState('users');
@@ -37,6 +49,15 @@ function UserListPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }
   // 검색 상태
   const [searchType, setSearchType] = useState('email');
   const [searchText, setSearchText] = useState('');
+
+  // 기간 검색 상태 (전역 atom 사용)
+  const dateRangeType = useAtomValue(dateRangeTypeAtom);
+  const startDate = useAtomValue(startDateAtom);
+  const endDate = useAtomValue(endDateAtom);
+  const setDateRangeType = useSetAtom(setDateRangeTypeAtom);
+  const setStartDate = useSetAtom(setStartDateAtom);
+  const setEndDate = useSetAtom(setEndDateAtom);
+  const initDateRange = useSetAtom(initDateRangeAtom);
 
   // 모달 상태
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -132,6 +153,85 @@ function UserListPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }
     }
   };
 
+  // 기간 검색 날짜 계산
+  const calculateDateRange = (rangeType) => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    switch (rangeType) {
+      case 'today': // 오늘
+        setStartDate(todayStr);
+        setEndDate(todayStr);
+        break;
+
+      case 'last7days': { // 지난 7일 (오늘 제외, 7일 전부터 어제까지)
+        const start = new Date(today);
+        start.setDate(start.getDate() - 7);
+        const end = new Date(today);
+        end.setDate(end.getDate() - 1);
+
+        setStartDate(`${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`);
+        setEndDate(`${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`);
+        break;
+      }
+
+      case 'last15days': { // 지난 15일 (15일 전부터 어제까지)
+        const start = new Date(today);
+        start.setDate(start.getDate() - 15);
+        const end = new Date(today);
+        end.setDate(end.getDate() - 1);
+
+        setStartDate(`${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`);
+        setEndDate(`${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`);
+        break;
+      }
+
+      case 'last30days': { // 지난 30일 (30일 전부터 어제까지)
+        const start = new Date(today);
+        start.setDate(start.getDate() - 30);
+        const end = new Date(today);
+        end.setDate(end.getDate() - 1);
+
+        setStartDate(`${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`);
+        setEndDate(`${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`);
+        break;
+      }
+
+      case 'thismonth': { // 이번달 (이번 달 1일 ~ 말일)
+        const firstDay = new Date(yyyy, today.getMonth(), 1);
+        const lastDay = new Date(yyyy, today.getMonth() + 1, 0);
+
+        setStartDate(`${firstDay.getFullYear()}-${String(firstDay.getMonth() + 1).padStart(2, '0')}-${String(firstDay.getDate()).padStart(2, '0')}`);
+        setEndDate(`${lastDay.getFullYear()}-${String(lastDay.getMonth() + 1).padStart(2, '0')}-${String(lastDay.getDate()).padStart(2, '0')}`);
+        break;
+      }
+
+      case 'all': // 전체
+        setStartDate('');
+        setEndDate('');
+        break;
+
+      case 'custom': // 기간선택 (오늘 날짜로 초기화)
+        setStartDate(todayStr);
+        setEndDate(todayStr);
+        break;
+
+      default:
+        setStartDate('');
+        setEndDate('');
+    }
+  };
+
+  // 기간 검색 타입 변경 핸들러
+  const handleDateRangeTypeChange = (e) => {
+    const newType = e.target.value;
+    setDateRangeType(newType);
+    calculateDateRange(newType);
+  };
+
   // 검색 처리
   const handleSearch = (e) => {
     e.preventDefault();
@@ -173,6 +273,29 @@ function UserListPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }
       loadUsers();
     }
   }, [currentPage, pageSize, activeTab]);
+
+  // 기간 검색 필터 변경 시 검색 실행
+  useEffect(() => {
+    if (activeTab === 'users') {
+      loadUsers();
+    }
+  }, [dateRangeType, startDate, endDate]);
+
+  // 컴포넌트 마운트 시 localStorage에서 기간 필터 초기화 및 storage 이벤트 리스너 등록
+  useEffect(() => {
+    // localStorage에서 값 로드
+    initDateRange();
+
+    // 다른 탭에서 변경사항 감지
+    const handleStorageChange = (e) => {
+      if (e.key === STORAGE_KEY && e.newValue) {
+        initDateRange();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   // Mock 데이터 (시스템 상태, 로그 등)
   const mockSystemStatus = [
@@ -303,6 +426,17 @@ function UserListPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }
                     </button>
                   </form>
                 </div>
+
+                {/* 기간 검색 필터 */}
+                <DateRangeFilter
+                  dateRangeType={dateRangeType}
+                  startDate={startDate}
+                  endDate={endDate}
+                  onDateRangeTypeChange={handleDateRangeTypeChange}
+                  onStartDateChange={setStartDate}
+                  onEndDateChange={setEndDate}
+                />
+
                 {/* 관리자 페이지 탭 네비게이션 (전체/사용자정보/거래정보) */}
                 <AdminTabNav />
               </div>
@@ -695,7 +829,9 @@ function UserListPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }
                 name: formData.get('name'),
                 email: formData.get('email'),
                 level: formData.get('level'),
-                is_active: formData.get('is_active') === 'true'
+                is_active: formData.get('is_active') === 'true',
+                referral_code: formData.get('referral_code') || null,
+                okx_uid: formData.get('okx_uid') || null
               };
               // 비밀번호가 입력된 경우에만 포함
               const password = formData.get('password');
@@ -778,6 +914,32 @@ function UserListPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }
                     placeholder="사용자 식별을 위한 메모를 입력하세요"
                     rows="3"
                     className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    초대자 코드
+                    <span className="text-xs text-muted-foreground ml-2">(수동 수정 가능)</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="referral_code"
+                    defaultValue={selectedUser.referral_code || ''}
+                    placeholder="초대자 코드를 입력하세요"
+                    className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    OKX UID
+                    <span className="text-xs text-muted-foreground ml-2">(수동 수정 가능)</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="okx_uid"
+                    defaultValue={selectedUser.okx_uid || ''}
+                    placeholder="OKX UID를 입력하세요"
+                    className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground"
                   />
                 </div>
               </div>
