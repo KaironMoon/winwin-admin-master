@@ -18,7 +18,10 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  FileText
+  FileText,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown
 } from 'lucide-react';
 import UserServices from '../services/userServices';
 import AdminTabNav from '../components/AdminTabNav';
@@ -53,6 +56,10 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
 
   // 검색 상태
   const [searchText, setSearchText] = useState('');
+
+  // 소팅 상태
+  const [sortField, setSortField] = useState(null); // 'created_at', 'first_linked_at', 'rebate_rate', 'referral_count'
+  const [sortOrder, setSortOrder] = useState(null); // null, 'asc', 'desc'
 
   // 기간 검색 상태 (전역 atom 사용)
   const dateRangeType = useAtomValue(dateRangeTypeAtom);
@@ -93,7 +100,9 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
         searchText,
         currentPage,
         pageSize,
-        isDemoFilter
+        isDemoFilter,
+        sortField,
+        sortOrder
       );
 
       if (response.ok) {
@@ -248,6 +257,41 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
     loadUsers();
   };
 
+  // 소팅 토글 처리 (없음 -> 오름차순 -> 내림차순 -> 없음)
+  const handleSort = (field) => {
+    if (sortField === field) {
+      // 같은 필드 클릭 시 순서 변경
+      if (sortOrder === null) {
+        setSortOrder('asc');
+      } else if (sortOrder === 'asc') {
+        setSortOrder('desc');
+      } else {
+        // desc -> 소팅 제거
+        setSortField(null);
+        setSortOrder(null);
+      }
+    } else {
+      // 다른 필드 클릭 시 새로 시작
+      setSortField(field);
+      setSortOrder('asc');
+    }
+    setCurrentPage(1); // 소팅 시 첫 페이지로
+  };
+
+  // 소팅 아이콘 렌더링
+  const renderSortIcon = (field) => {
+    if (sortField !== field) {
+      return <ArrowUpDown size={14} className="ml-1 text-muted-foreground" />;
+    }
+    if (sortOrder === 'asc') {
+      return <ArrowUp size={14} className="ml-1 text-primary" />;
+    }
+    if (sortOrder === 'desc') {
+      return <ArrowDown size={14} className="ml-1 text-primary" />;
+    }
+    return <ArrowUpDown size={14} className="ml-1 text-muted-foreground" />;
+  };
+
   // 페이지 변경
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -296,6 +340,13 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
       loadUsers();
     }
   }, [isDemoFilter]);
+
+  // 소팅 변경 시 검색 실행
+  useEffect(() => {
+    if (activeTab === 'users') {
+      loadUsers();
+    }
+  }, [sortField, sortOrder]);
 
   // 컴포넌트 마운트 시 localStorage에서 필터 초기화
   useEffect(() => {
@@ -478,12 +529,44 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">ID</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">okx uid</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">가입일자</th>
+                        <th className="px-6 py-3 text-left">
+                          <button
+                            onClick={() => handleSort('created_at')}
+                            className="flex items-center text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+                          >
+                            가입일자
+                            {renderSortIcon('created_at')}
+                          </button>
+                        </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">초대자코드</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">활동시작일</th>
+                        <th className="px-6 py-3 text-left">
+                          <button
+                            onClick={() => handleSort('first_linked_at')}
+                            className="flex items-center text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+                          >
+                            활동시작일
+                            {renderSortIcon('first_linked_at')}
+                          </button>
+                        </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">수수료계층</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">활동수수료</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">제휴라인</th>
+                        <th className="px-6 py-3 text-left">
+                          <button
+                            onClick={() => handleSort('rebate_rate')}
+                            className="flex items-center text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+                          >
+                            활동수수료
+                            {renderSortIcon('rebate_rate')}
+                          </button>
+                        </th>
+                        <th className="px-6 py-3 text-left">
+                          <button
+                            onClick={() => handleSort('referral_count')}
+                            className="flex items-center text-xs font-medium text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+                          >
+                            제휴라인
+                            {renderSortIcon('referral_count')}
+                          </button>
+                        </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">wallet</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">symbol</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">ai-bot</th>
@@ -566,7 +649,9 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
                             }) : '-'}
                           </td>
                           <td className="px-6 py-2 whitespace-nowrap text-sm text-foreground">Lvl.{user.referrer_depth || '-'}</td>
-                          <td className="px-6 py-2 whitespace-nowrap text-sm text-foreground">{'-'}</td>
+                          <td className="px-6 py-2 whitespace-nowrap text-sm text-foreground">
+                            {user.rebate_rate ? Number(user.rebate_rate).toFixed(2) + '%' : '-'}
+                          </td>
                           <td className="px-6 py-2 whitespace-nowrap text-sm text-foreground">
                             <div className="flex items-center space-x-2">
                               <span>{user.referral_count || '0'}</span>
@@ -851,6 +936,11 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
               if (password) {
                 userData.password = password;
               }
+              // rebate_rate가 입력된 경우에만 포함
+              const rebateRate = formData.get('rebate_rate');
+              if (rebateRate) {
+                userData.rebate_rate = parseFloat(rebateRate);
+              }
 
               // 관리자 메모 처리 (별도 API 호출)
               const adminMemo = formData.get('admin_memo');
@@ -952,6 +1042,22 @@ function AdminPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
                     name="okx_uid"
                     defaultValue={selectedUser.okx_uid || ''}
                     placeholder="OKX UID를 입력하세요"
+                    className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-1">
+                    활동수수료 (%)
+                    <span className="text-xs text-muted-foreground ml-2">(0~100)</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="rebate_rate"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    defaultValue={selectedUser.rebate_rate ? Number(selectedUser.rebate_rate).toFixed(2) : ''}
+                    placeholder="0.00"
                     className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground"
                   />
                 </div>

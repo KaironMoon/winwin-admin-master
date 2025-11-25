@@ -109,7 +109,7 @@ const UserServices = {
 
         return userInfo;
     },
-    getListByPage: async (searchText, page, pageSize, isDemoFilter = false) => {
+    getListByPage: async (searchText, page, pageSize, isDemoFilter = false, sortField = null, sortOrder = null, startDate = null, endDate = null) => {
         const token = UserServices.getUserToken();
         const params = new URLSearchParams();
         if (searchText) {
@@ -123,6 +123,16 @@ const UserServices = {
         }
         params.append('with_statistics', 'true');
         params.append('is_demo', isDemoFilter);
+        if (sortField && sortOrder) {
+            params.append('sort_field', sortField);
+            params.append('sort_order', sortOrder);
+        }
+        if (startDate) {
+            params.append('start_date', startDate);
+        }
+        if (endDate) {
+            params.append('end_date', endDate);
+        }
         const queryString = params.toString();
         const url = `${config.API_BASE_URL}/api/user${queryString ? '?' + queryString : ''}`;
         const response = await fetch(url, {
