@@ -47,7 +47,6 @@ function UserListPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }
   const [totalPages, setTotalPages] = useState(0);
 
   // 검색 상태
-  const [searchType, setSearchType] = useState('email');
   const [searchText, setSearchText] = useState('');
 
   // 기간 검색 상태 (전역 atom 사용)
@@ -81,7 +80,6 @@ function UserListPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }
     setError(null);
     try {
       const response = await UserServices.getListByPage(
-        searchType,
         searchText,
         currentPage,
         pageSize
@@ -402,21 +400,12 @@ function UserListPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }
 
                   {/* 검색 폼 */}
                   <form onSubmit={handleSearch} className="flex space-x-2">
-                    <select
-                      value={searchType}
-                      onChange={(e) => setSearchType(e.target.value)}
-                      className="px-3 py-1.5 border border-input rounded-md bg-background text-foreground text-sm"
-                    >
-                      <option value="email">이메일</option>
-                      <option value="name">이름</option>
-                      <option value="level">레벨</option>
-                    </select>
                     <input
                       type="text"
                       value={searchText}
                       onChange={(e) => setSearchText(e.target.value)}
-                      placeholder="검색어 입력"
-                      className="px-3 py-1.5 border border-input rounded-md bg-background text-foreground text-sm"
+                      placeholder="UID, 코드 또는 메모 검색"
+                      className="px-3 py-1.5 border border-input rounded-md bg-background text-foreground text-sm min-w-[250px]"
                     />
                     <button
                       type="submit"

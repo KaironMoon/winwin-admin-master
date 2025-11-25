@@ -313,7 +313,7 @@ function TransactionListPage({ isDarkMode, user, onLogout }) {
                     type="text"
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
-                    placeholder="사용자 UID, 닉네임 검색"
+                    placeholder="UID, 코드 또는 메모 검색"
                     className="px-3 py-1.5 border border-input rounded-md bg-background text-foreground text-sm min-w-[250px]"
                   />
                   <button

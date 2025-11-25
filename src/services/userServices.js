@@ -109,12 +109,11 @@ const UserServices = {
 
         return userInfo;
     },
-    getListByPage: async (searchType, searchText, page, pageSize) => {
+    getListByPage: async (searchText, page, pageSize) => {
         const token = UserServices.getUserToken();
         const params = new URLSearchParams();
-        if (searchType && searchText) {
-            params.append('searchType', searchType);
-            params.append('searchText', searchText);
+        if (searchText) {
+            params.append('search_factor', searchText);
         }
         if (page !== undefined) {
             params.append('page', page);

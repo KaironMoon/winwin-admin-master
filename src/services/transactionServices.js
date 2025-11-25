@@ -68,7 +68,7 @@ const TransactionServices = {
 
   /**
    * 사용자별 거래 요약 정보 조회 (관리자 전용)
-   * @param {string} search_text - 검색어 (사용자 UID, 닉네임, 이메일)
+   * @param {string} search_text - 통합 검색 (UID, 코드, 메모)
    * @param {number} page - 페이지 번호 (기본값: 1)
    * @param {number} size - 페이지 크기 (기본값: 20)
    * @returns {Promise} - 사용자 거래 요약 목록
@@ -83,7 +83,7 @@ const TransactionServices = {
       };
 
       if (search_text) {
-        params.search_text = search_text;
+        params.search_factor = search_text;
       }
 
       const response = await axios.get(`${config.API_BASE_URL}/api/transactions/users/summary`, {
@@ -128,7 +128,7 @@ const TransactionServices = {
   /**
    * 하위 추천인 거래 요약 정보 조회 (관리자 전용)
    * @param {number} user_id - 상위 추천인 사용자 ID
-   * @param {string} search_text - 검색어 (사용자 UID, 닉네임, 이메일)
+   * @param {string} search_text - 통합 검색 (UID, 코드, 메모)
    * @param {number} page - 페이지 번호 (기본값: 1)
    * @param {number} size - 페이지 크기 (기본값: 20)
    * @returns {Promise} - 하위 추천인 거래 요약 목록
@@ -144,7 +144,7 @@ const TransactionServices = {
       };
 
       if (search_text) {
-        params.search_text = search_text;
+        params.search_factor = search_text;
       }
 
       const response = await axios.get(`${config.API_BASE_URL}/api/transactions/users/referrals/summary`, {
