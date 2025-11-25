@@ -36,13 +36,24 @@ import {
   X
 } from 'lucide-react';
 import * as botUtils from '../lib/botUtils';
-import { useAtomValue } from 'jotai';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { isDemoAtom } from '../stores/isDemoStore';
+import {
+  isDemoFilterAtom,
+  setIsDemoFilterAtom,
+  initDemoFilterAtom
+} from '../stores/demoFilterStore';
 import { fetchPendingOrders, fetchOrderHistory, categorizePendingOrders } from '../lib/orderDisplayApi';
 import { authenticatedFetch } from '../lib/authUtils';
 
 function BotManagementPage({ isDarkMode, user, onShowOKXModal, onLogout, okxConnected, balance, positions, orders, onShowLoginModal }) {
   const isDemo = useAtomValue(isDemoAtom);
+
+  // 데모 필터 상태 (전역 atom 사용)
+  const isDemoFilter = useAtomValue(isDemoFilterAtom);
+  const setIsDemoFilter = useSetAtom(setIsDemoFilterAtom);
+  const initDemoFilter = useSetAtom(initDemoFilterAtom);
+
   const [selectedBotId, setSelectedBotId] = useState(null);
   const [apiBots, setApiBots] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -176,14 +187,14 @@ function BotManagementPage({ isDarkMode, user, onShowOKXModal, onLogout, okxConn
   };
 
   // API에서 봇 데이터 가져오기
-  const fetchBots = async (isDemo) => {
+  const fetchBots = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
-      const data = await botUtils.getMyBots(isDemo);
+      const data = await botUtils.getMyBots(isDemoFilter);
       setApiBots(data);
       generateRequestedOrders(data); // entry_config 기반 주문 생성
       
@@ -251,9 +262,15 @@ function BotManagementPage({ isDarkMode, user, onShowOKXModal, onLogout, okxConn
     }
   };
 
+  // 데모 필터 초기화
   useEffect(() => {
-    fetchBots(isDemo);
-  }, [user, isDemo]);
+    initDemoFilter();
+  }, [initDemoFilter]);
+
+  // 봇 목록 로드
+  useEffect(() => {
+    fetchBots();
+  }, [user, isDemoFilter]);
 
   // 봇 선택 시 주문 데이터 로딩 및 자동 새로고침 (30초)
   useEffect(() => {
@@ -1488,14 +1505,26 @@ function BotManagementPage({ isDarkMode, user, onShowOKXModal, onLogout, okxConn
             <h1 className="text-2xl font-bold text-foreground">봇 관리</h1>
             <p className="text-muted-foreground">활성화된 봇들의 상태와 성과를 모니터링하세요</p>
           </div>
-          <button
-            onClick={() => fetchBots(isDemo)}
-            disabled={loading}
-            className="btn-secondary flex items-center space-x-2 px-4 py-2"
-          >
-            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-            <span>{loading ? '새로고침 중...' : '새로고침'}</span>
-          </button>
+          <div className="flex items-center space-x-4">
+            {/* DEMO 체크박스 */}
+            <label className="flex items-center space-x-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isDemoFilter}
+                onChange={(e) => setIsDemoFilter(e.target.checked)}
+                className="w-4 h-4 text-primary border-input rounded focus:ring-primary"
+              />
+              <span className="text-sm font-medium text-foreground">DEMO</span>
+            </label>
+            <button
+              onClick={() => fetchBots()}
+              disabled={loading}
+              className="btn-secondary flex items-center space-x-2 px-4 py-2"
+            >
+              <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+              <span>{loading ? '새로고침 중...' : '새로고침'}</span>
+            </button>
+          </div>
         </div>
 
         {/* 에러 메시지 */}

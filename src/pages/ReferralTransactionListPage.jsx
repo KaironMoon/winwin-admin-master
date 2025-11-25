@@ -27,6 +27,11 @@ import {
   initDateRangeAtom,
   STORAGE_KEY
 } from '../stores/dateRangeStore';
+import {
+  isDemoFilterAtom,
+  setIsDemoFilterAtom,
+  initDemoFilterAtom
+} from '../stores/demoFilterStore';
 
 /**
  * 하위 추천인 거래정보 페이지
@@ -57,6 +62,11 @@ function ReferralTransactionListPage({ isDarkMode, user, onLogout }) {
   const setEndDate = useSetAtom(setEndDateAtom);
   const initDateRange = useSetAtom(initDateRangeAtom);
 
+  // 데모 필터 상태 (전역 atom 사용)
+  const isDemoFilter = useAtomValue(isDemoFilterAtom);
+  const setIsDemoFilter = useSetAtom(setIsDemoFilterAtom);
+  const initDemoFilter = useSetAtom(initDemoFilterAtom);
+
   // 메모 편집 상태
   const [editingMemo, setEditingMemo] = useState({}); // { userId: memoText }
   const [savingMemo, setSavingMemo] = useState({}); // { userId: boolean }
@@ -82,6 +92,9 @@ function ReferralTransactionListPage({ isDarkMode, user, onLogout }) {
       const response = await TransactionServices.getReferralsTradingSummary(
         userId,
         searchText,
+        startDate,
+        endDate,
+        isDemoFilter,
         currentPage,
         pageSize
       );
@@ -204,10 +217,18 @@ function ReferralTransactionListPage({ isDarkMode, user, onLogout }) {
     }
   }, [dateRangeType, startDate, endDate]);
 
+  // 데모 필터 변경 시 검색 실행
+  useEffect(() => {
+    if (userId) {
+      loadReferralsSummary();
+    }
+  }, [isDemoFilter]);
+
   // 컴포넌트 마운트 시 localStorage에서 기간 필터 초기화 및 storage 이벤트 리스너 등록
   useEffect(() => {
     // localStorage에서 값 로드
     initDateRange();
+    initDemoFilter();
 
     // 다른 탭에서 변경사항 감지
     const handleStorageChange = (e) => {
@@ -324,22 +345,36 @@ function ReferralTransactionListPage({ isDarkMode, user, onLogout }) {
                   <p className="text-muted-foreground text-sm">사용자별 활성 봇 및 수익률 정보</p>
                 </div>
 
-                {/* 검색 폼 */}
-                <form onSubmit={handleSearch} className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                    placeholder="UID, 코드 또는 메모 검색"
-                    className="px-3 py-1.5 border border-input rounded-md bg-background text-foreground text-sm min-w-[250px]"
-                  />
-                  <button
-                    type="submit"
-                    className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                  >
-                    <Search size={16} />
-                  </button>
-                </form>
+                {/* DEMO 필터 & 검색 폼 */}
+                <div className="flex items-center space-x-4">
+                  {/* DEMO 체크박스 */}
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isDemoFilter}
+                      onChange={(e) => setIsDemoFilter(e.target.checked)}
+                      className="w-4 h-4 text-primary border-input rounded focus:ring-primary"
+                    />
+                    <span className="text-sm font-medium text-foreground">DEMO</span>
+                  </label>
+
+                  {/* 검색 폼 */}
+                  <form onSubmit={handleSearch} className="flex space-x-2">
+                    <input
+                      type="text"
+                      value={searchText}
+                      onChange={(e) => setSearchText(e.target.value)}
+                      placeholder="UID, 코드 또는 메모 검색"
+                      className="px-3 py-1.5 border border-input rounded-md bg-background text-foreground text-sm min-w-[250px]"
+                    />
+                    <button
+                      type="submit"
+                      className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                    >
+                      <Search size={16} />
+                    </button>
+                  </form>
+                </div>
               </div>
 
               {/* 기간 검색 필터 */}
@@ -388,6 +423,15 @@ function ReferralTransactionListPage({ isDarkMode, user, onLogout }) {
                       </th>
                       <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         ROE
+                      </th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        완료봇<br/>투자금
+                      </th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        완료봇<br/>실현손익
+                      </th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        완료봇<br/>수수료
                       </th>
                     </tr>
                   </thead>
@@ -515,6 +559,44 @@ function ReferralTransactionListPage({ isDarkMode, user, onLogout }) {
                             {parseFloat(summary.total_roe) >= 0 ? '+' : ''}
                             {parseFloat(summary.total_roe).toFixed(2)}%
                           </div>
+                        </td>
+
+                        {/* 완료된 봇 투자금 */}
+                        <td className="px-4 py-3 whitespace-nowrap text-center text-sm text-foreground">
+                          {summary.completed_bots_invested
+                            ? `$${parseFloat(summary.completed_bots_invested).toLocaleString('en-US', {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 2
+                              })}`
+                            : '-'
+                          }
+                        </td>
+
+                        {/* 완료된 봇 실현손익 */}
+                        <td className="px-4 py-3 whitespace-nowrap text-center text-sm">
+                          <span className={summary.completed_bots_realized_pnl
+                            ? getPnlColor(summary.completed_bots_realized_pnl)
+                            : 'text-muted-foreground'
+                          }>
+                            {summary.completed_bots_realized_pnl
+                              ? `${parseFloat(summary.completed_bots_realized_pnl) >= 0 ? '+' : ''}$${parseFloat(summary.completed_bots_realized_pnl).toLocaleString('en-US', {
+                                  minimumFractionDigits: 0,
+                                  maximumFractionDigits: 2
+                                })}`
+                              : '-'
+                            }
+                          </span>
+                        </td>
+
+                        {/* 완료된 봇 수수료 */}
+                        <td className="px-4 py-3 whitespace-nowrap text-center text-sm text-foreground">
+                          {summary.completed_bots_total_fee
+                            ? `$${parseFloat(summary.completed_bots_total_fee).toLocaleString('en-US', {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 2
+                              })}`
+                            : '-'
+                          }
                         </td>
                       </tr>
                     ))}

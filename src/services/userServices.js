@@ -109,7 +109,7 @@ const UserServices = {
 
         return userInfo;
     },
-    getListByPage: async (searchText, page, pageSize) => {
+    getListByPage: async (searchText, page, pageSize, isDemoFilter = false) => {
         const token = UserServices.getUserToken();
         const params = new URLSearchParams();
         if (searchText) {
@@ -122,6 +122,7 @@ const UserServices = {
             params.append('pageSize', pageSize);
         }
         params.append('with_statistics', 'true');
+        params.append('is_demo', isDemoFilter);
         const queryString = params.toString();
         const url = `${config.API_BASE_URL}/api/user${queryString ? '?' + queryString : ''}`;
         const response = await fetch(url, {

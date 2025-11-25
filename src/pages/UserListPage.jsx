@@ -33,6 +33,11 @@ import {
   initDateRangeAtom,
   STORAGE_KEY
 } from '../stores/dateRangeStore';
+import {
+  isDemoFilterAtom,
+  setIsDemoFilterAtom,
+  initDemoFilterAtom
+} from '../stores/demoFilterStore';
 
 function UserListPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }) {
   const [activeTab, setActiveTab] = useState('users');
@@ -58,6 +63,11 @@ function UserListPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }
   const setEndDate = useSetAtom(setEndDateAtom);
   const initDateRange = useSetAtom(initDateRangeAtom);
 
+  // 데모 필터 상태 (전역 atom 사용)
+  const isDemoFilter = useAtomValue(isDemoFilterAtom);
+  const setIsDemoFilter = useSetAtom(setIsDemoFilterAtom);
+  const initDemoFilter = useSetAtom(initDemoFilterAtom);
+
   // 모달 상태
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -82,7 +92,8 @@ function UserListPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }
       const response = await UserServices.getListByPage(
         searchText,
         currentPage,
-        pageSize
+        pageSize,
+        isDemoFilter
       );
 
       if (response.ok) {
@@ -279,10 +290,18 @@ function UserListPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }
     }
   }, [dateRangeType, startDate, endDate]);
 
-  // 컴포넌트 마운트 시 localStorage에서 기간 필터 초기화 및 storage 이벤트 리스너 등록
+  // 데모 필터 변경 시 검색 실행
+  useEffect(() => {
+    if (activeTab === 'users') {
+      loadUsers();
+    }
+  }, [isDemoFilter]);
+
+  // 컴포넌트 마운트 시 localStorage에서 필터 초기화
   useEffect(() => {
     // localStorage에서 값 로드
     initDateRange();
+    initDemoFilter();
 
     // 다른 탭에서 변경사항 감지
     const handleStorageChange = (e) => {
@@ -399,21 +418,34 @@ function UserListPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }
                   </div>
 
                   {/* 검색 폼 */}
-                  <form onSubmit={handleSearch} className="flex space-x-2">
-                    <input
-                      type="text"
-                      value={searchText}
-                      onChange={(e) => setSearchText(e.target.value)}
-                      placeholder="UID, 코드 또는 메모 검색"
-                      className="px-3 py-1.5 border border-input rounded-md bg-background text-foreground text-sm min-w-[250px]"
-                    />
-                    <button
-                      type="submit"
-                      className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                    >
-                      <Search size={16} />
-                    </button>
-                  </form>
+                  <div className="flex items-center space-x-4">
+                    {/* DEMO 체크박스 */}
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isDemoFilter}
+                        onChange={(e) => setIsDemoFilter(e.target.checked)}
+                        className="w-4 h-4 text-primary border-input rounded focus:ring-primary"
+                      />
+                      <span className="text-sm font-medium text-foreground">DEMO</span>
+                    </label>
+
+                    <form onSubmit={handleSearch} className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                        placeholder="UID, 코드 또는 메모 검색"
+                        className="px-3 py-1.5 border border-input rounded-md bg-background text-foreground text-sm min-w-[250px]"
+                      />
+                      <button
+                        type="submit"
+                        className="px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                      >
+                        <Search size={16} />
+                      </button>
+                    </form>
+                  </div>
                 </div>
 
                 {/* 기간 검색 필터 */}
@@ -453,7 +485,6 @@ function UserListPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">수수료계층</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">제휴라인</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">wallet</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">wallet demo</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">symbol</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">ai-bot</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">레벨</th>
@@ -556,9 +587,6 @@ function UserListPage({ isDarkMode, user, onShowOKXModal, onLogout, onNavigate }
                           </td>
                           <td className="px-6 py-2 whitespace-nowrap text-sm text-foreground">
                             {user.okx_balance ? Number(user.okx_balance).toFixed(2) : '-'}
-                          </td>
-                          <td className="px-6 py-2 whitespace-nowrap text-sm text-foreground">
-                            {user.okx_balance_demo ? Number(user.okx_balance_demo).toFixed(2) : '-'}
                           </td>
                           <td className="px-6 py-2 whitespace-nowrap text-sm text-foreground">{user.symbol_count || '-'}</td>
                           <td className="px-6 py-2 whitespace-nowrap text-sm text-foreground">{user.bot_count || '-'}</td>

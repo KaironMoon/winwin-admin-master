@@ -69,21 +69,33 @@ const TransactionServices = {
   /**
    * 사용자별 거래 요약 정보 조회 (관리자 전용)
    * @param {string} search_text - 통합 검색 (UID, 코드, 메모)
+   * @param {string} start_date - 시작 날짜 (YYYY-MM-DD)
+   * @param {string} end_date - 종료 날짜 (YYYY-MM-DD)
+   * @param {boolean} is_demo - 데모 봇 필터 (true: 데모만, false: 실제만)
    * @param {number} page - 페이지 번호 (기본값: 1)
    * @param {number} size - 페이지 크기 (기본값: 20)
    * @returns {Promise} - 사용자 거래 요약 목록
    */
-  getUsersTradingSummary: async (search_text = '', page = 1, size = 20) => {
+  getUsersTradingSummary: async (search_text = '', start_date = null, end_date = null, is_demo = false, page = 1, size = 20) => {
     const token = TransactionServices.getUserToken();
 
     try {
       const params = {
         page,
-        size
+        size,
+        is_demo: is_demo
       };
 
       if (search_text) {
         params.search_factor = search_text;
+      }
+
+      if (start_date) {
+        params.start_date = start_date;
+      }
+
+      if (end_date) {
+        params.end_date = end_date;
       }
 
       const response = await axios.get(`${config.API_BASE_URL}/api/transactions/users/summary`, {
@@ -129,22 +141,34 @@ const TransactionServices = {
    * 하위 추천인 거래 요약 정보 조회 (관리자 전용)
    * @param {number} user_id - 상위 추천인 사용자 ID
    * @param {string} search_text - 통합 검색 (UID, 코드, 메모)
+   * @param {string} start_date - 시작 날짜 (YYYY-MM-DD)
+   * @param {string} end_date - 종료 날짜 (YYYY-MM-DD)
+   * @param {boolean} is_demo - 데모 봇 필터 (true: 데모만, false: 실제만)
    * @param {number} page - 페이지 번호 (기본값: 1)
    * @param {number} size - 페이지 크기 (기본값: 20)
    * @returns {Promise} - 하위 추천인 거래 요약 목록
    */
-  getReferralsTradingSummary: async (user_id, search_text = '', page = 1, size = 20) => {
+  getReferralsTradingSummary: async (user_id, search_text = '', start_date = null, end_date = null, is_demo = false, page = 1, size = 20) => {
     const token = TransactionServices.getUserToken();
 
     try {
       const params = {
         user_id,
         page,
-        size
+        size,
+        is_demo: is_demo
       };
 
       if (search_text) {
         params.search_factor = search_text;
+      }
+
+      if (start_date) {
+        params.start_date = start_date;
+      }
+
+      if (end_date) {
+        params.end_date = end_date;
       }
 
       const response = await axios.get(`${config.API_BASE_URL}/api/transactions/users/referrals/summary`, {
